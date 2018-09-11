@@ -1,0 +1,30 @@
+#{if _chatMessage.attach == null}
+<div class="chat-content" data-toggle="tooltip" data-placement="left"
+     title="${controllers.Functions.getDateOrTime(_chatMessage.date)}">
+    <p>${_chatMessage.content}</p>
+    #{if _chatMessage.msgSender.id==_user.id && !_chatMessage.readed}
+        <p class="chat-unread">уншаагүй</p>
+    #{/if}
+</div>
+#{/if}
+#{else }
+%{ extension =_chatMessage.attach.extension}%
+    #{if controllers.Consts.imageFileExtensions.contains(extension)}
+    <div class="chat-content chat-image">
+        <a href="${_chatMessage.attach?.dir}.${extension}" download="${_chatMessage.attach.name}.${extension}">
+            <img src="${_chatMessage.attach?.dir}t.jpg" alt="хавсралт" height="80" width="80">
+        </a>
+    </div>
+    #{/if}
+    #{else }
+    <div class="chat-content" data-toggle="tooltip" data-placement="left"
+         title="${controllers.Functions.getDateOrTime(_chatMessage.date)}">
+        <a href="${_chatMessage.attach.dir}.${extension}" download="${_chatMessage.attach.name}.${extension}">
+            <p>${_chatMessage.attach.name}.${extension}</p>
+        </a>
+        #{if _chatMessage.msgSender.id==_user.id && !_chatMessage.readed}
+            <p class="chat-unread">уншаагүй</p>
+        #{/if}
+    </div>
+    #{/else}
+#{/else}

@@ -1,0 +1,245 @@
+#{extends 'CRUD/layout.html' /}
+#{set activeMenu: 'Dashboard'/}
+#{set activeMenuSub: ''/}
+#{fancybox-config /}
+#{set 'moreStyles'}
+<link rel="stylesheet" media="screen" href="@{'/assets/plugins/coverphoto/coverphoto.css'}"/>
+<link rel="stylesheet" media="screen" href="@{'/assets/plugins/datetimepicker/jquery.datetimepicker.css'}"/>
+<link rel="stylesheet" media="screen" href="@{'/public/stylesheets/post.css'}"/>
+#{/set}
+#{alertMessages /}
+<script src="/public/jquery-ui-1.11.2.custom/jquery-ui.min.js"></script>
+#{set 'moreScripts'}
+<script src="@{'/assets/plugins/jquery-validation/jquery.validate.min.js'}" type="text/javascript"></script>
+<script src="@{'/public/javascripts/validateOnlyNumber.js'}" type="text/javascript"></script>
+<script src="@{'/assets/plugins/coverphoto/coverphoto.js'}" type="text/javascript"></script>
+<script src="@{'/assets/plugins/datetimepicker/jquery.datetimepicker.js'}" type="text/javascript"></script>
+<script src="@{'/assets/js/dashboard.js'}" type="text/javascript"></script>
+<script src="@{'/assets/js/post.js'}" type="text/javascript"></script>
+<script>
+    var selectUsersDialogType = "sendUserTag";
+    function sendToUserRemoveSelection(selType, id) {
+        $("div#" + selectUsersDialogType + " li#" + selType + "-" + id).remove();
+    }
+
+    function selectUsersDialog(type) {
+        selectUsersDialogType = type;
+        closeButtonClick = false;
+        sendToUserRemoveAll();
+        $("div#" + selectUsersDialogType + " li").each(function () {
+            $('div#divSelUser td#' + $(this).attr('id')).parent().click();
+        });
+    }
+    function sendToUserTeamFunc() {
+        if (!closeButtonClick) {
+            $('#modal-select').modal('hide');
+            var obj = $('div#' + selectUsersDialogType);
+            obj.html("<ul></ul>");
+            obj = obj.find("ul");
+            var objTd;
+            $('div#divSelUser tr.selUserTr').each(function () {
+                if ($(this).attr('enable') == 1) {
+                    objTd = $(this).find('td.checked');
+                    if (objTd.attr('type') == 'checked') {
+                        obj.append("<li id=" + objTd.attr('selType') + "-" + objTd.attr('uid') + " seltype=" + objTd.attr('selType') + " uid=" + objTd.attr('uid') + ">" +
+                                "<span onclick=sendToUserRemoveSelection('" +
+                                objTd.attr('selType') + "'," + objTd.attr('uid') + ")><i class='fa fa-minus-circle asterisk'></i> </span>" + objTd.attr('name') + "</li>");
+                    }
+                }
+            });
+        }
+    }
+    var total_groups = '${total_groups}';
+    $(document).ready(function () {
+        $(".output").CoverPhoto({
+            postUrl: '/upload',
+            currentImage: '${dashboardManagement!=null?dashboardManagement.imageDir: '/public/images/cover_sample.jpg'}',
+            editable: ${admin?true:false}
+        });
+        $(".output").bind('coverPhotoUpdated', function (evt, dataUrl) {
+            $(".output").empty();
+            $("<img>").attr("src", dataUrl).appendTo(".output");
+            $.ajax({
+                type: "POST",
+                data: {
+                    fileData: dataUrl
+                }, url: "/userCoverPicture"
+            });
+
+        });
+//        uploader._options.allowedExtensions = ['mp4', 'gif', 'jpg', 'jpeg', 'png', 'tiff'];
+//        uploader._options.sizeLimit = 1048576 * 200;
+
+        window.setTimeout(function () {
+            $('.from-notification-post').removeClass("from-notification-post");
+        }, 5000);
+
+        #{if chatUserId != null}
+            charmenu.addClass("chat-opened");
+            charmenu.animate({right: '0px'});
+            createConnection(${chatUserId});
+        #{/if}
+
+
+        $("img.post-user-info-hover").bind('mouseenter', function () {
+            var aPos = $(this).offset(), ctTop = 0, ctLeft = 0;
+            ctTop = (aPos.top - $(window).scrollTop());
+            ctLeft = (aPos.left - $(window).scrollLeft()) - 360;
+            chatUserDiv.css('top', ctTop + "px");
+            chatUserDiv.css('left', ctLeft + "px");
+            chatUserDiv.show();
+            chatUserDiv.find("img").attr("src", $(this).attr("src"));
+            chatUserDiv.find("strong").html($(this).attr("name"));
+            chatUserDiv.find("div.chat-user-info-team").html($(this).attr("team"));
+            chatUserDiv.find("div.chat-user-info-position").html($(this).attr("position"));
+            chatUserDiv.find("div.chat-user-info-phone").html($(this).attr("phone"));
+            chatUserDiv.find("div.chat-user-info-email").html($(this).attr("email"));
+            mousePostUserImg = true;
+        }).bind('mouseleave', function () {
+            mousePostUserImg = false;
+            var position = chatUserDiv.offset();
+            var bottom = position.top + chatUserDiv.outerHeight();
+            var right = position.left + chatUserDiv.outerWidth();
+            right += 50;
+            if (!(currentMousePos.x > position.left && currentMousePos.x < right
+                    && currentMousePos.y > position.top && currentMousePos.y < bottom)) {
+                chatUserDiv.hide();
+            }
+        });
+    });
+
+
+</script>
+
+    #{AttachScriptMulti uploadPath:controllers.Consts.uploadPostPath /}
+    #{tag-attach-file-choose modal:true,placement:'right'/}
+#{/set}
+#{addQuestionBox par:'NULL'/}
+#{checkFileExtension /}
+
+<div class="modal fade modal-fullscreen" id="imageShowModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog ">
+        <div class="modal-content">
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="row">
+            <div style="margin-right: 250px" id="postArea">
+                <div class="cover-image">
+                    <div class="output"></div>
+                </div>
+                <div class="col-md-12">
+                    <div class="row">
+                        <div class="post-area-small">
+                            <div id="postAreaPadding">
+                                <div class="row">
+                                    <div class="post-new">
+                                        <div class="post-new-body">
+                                            <div>
+                                                <img class="pull-left m-r-10" src="${user.profilePicture}"
+                                                     alt="avatar 12"
+                                                     width="70">
+
+                                                <div class="media-body">
+                                                    <div class="Rd">
+                                                        <div class="eg">
+                                                            <div class="yw oo"></div>
+                                                            <div class="yw VK"></div>
+                                                        </div>
+                                                        <div class="textPostSmall" style="display: block;"> Нийтлэл
+                                                            нэмэх
+                                                            ...
+                                                        </div>
+                                                        <textarea class="form-control" id="textPostFull"
+                                                                  style="display: none"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="postHidden" style="display: none">
+                                                <div id="attachPost" class="m-t-10">
+                                                    <div class="pull-left m-r-10"><strong
+                                                            style="margin-left: 24px;">Зураг:</strong>
+                                                    </div>
+                                                    <div class="media-body">
+                                                        <ul class="uploadBox" id="uPost">
+                                                            <li>
+                                                <span> <button
+                                                        id="triggerClickUploadEvent" data-toggle="popover"
+                                                        class="btn upload btn-default btn-icon-sm btn-rounded"
+                                                        data-rel="tooltip" title="Хавсаргах"><i
+                                                        class="fa fa-cloud-upload"></i></button></span>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div id="seeUsersPost" class="m-t-10"
+                                                     style="display: inline-block;position:relative;width: 100%">
+                                                    <div class="pull-left" style="width: 80px;"><strong
+                                                            style="  margin-left: 28px;margin-top: 3px;margin-right: 15px;">Хэнд:</strong>
+                                                    </div>
+                                                    <div class="seeUserPost" id="sendUserTag">
+                                                        <ul>
+                                                            <li id="a-0" seltype="a" uid="0"><span
+                                                                    onclick="sendToUserRemoveSelection('a','0')">
+                                                <i class="fa fa-minus-circle asterisk"></i> Бүгд</span></li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="post-select-user-icon"
+                                                         data-toggle="modal" data-target="#modal-select"
+                                                         onclick="selectUsersDialog('sendUserTag')">
+                                                        <i class="fa fa-plus" style="  font-size: 11px;"></i>
+                                                        <span style="  font-size: 21px;"><i
+                                                                class="fa fa-user"></i></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="post-new-footer text-right">
+                                            <button type="button" class="btn btn-default btn-white"
+                                                    onclick="cancelPost()">Болих
+                                            </button>
+                                            <button type="button" class="btn btn-post"
+                                                    onclick="addPost('post', null)">Нийтлэх
+                                            </button>
+                                        </div>
+                                        <div class="progress">
+                                            <ul class="groupUl" id="u_jsonp_4_1">
+                                                <li class="groupLi" onclick="addPostShow()">
+                                                    <a class="zocial">
+                                                        <i class="fa fa-camera-retro"></i>
+                                                        Зураг/Видео
+                                                    </a>
+                                                </li>
+                                                <li class="groupLi" onclick="showQuestion()">
+                                                    <a class="zocial">
+                                                        <i class="fa fa-bar-chart-o"></i>
+                                                        Санал асуулга
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            #{include 'Dashboard/addPost.html'/}
+                                <div class="load-more-animation">
+                                    <i class="fa fa-spinner faa-spin animated"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="modalEvent"></div>
+                <form action="" id="formEvent" method="get" accept-charset="utf-8"></form>
+            </div>
+        </div>
+    </div>
+</div>
+
+#{include "SharedView/AttachsMulti.html"/}
+#{selectSentUsers containTag:"div#sendUserTag", title:'Хүн сонгох',showTeam:true, effect:13 /}
+#{ImgThumbnail div:'div.post-images'/}

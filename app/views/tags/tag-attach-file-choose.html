@@ -1,0 +1,235 @@
+<link rel="stylesheet" href="/assets/plugins/jstree/src/themes/default/style.css">
+<script src="/assets/plugins/jstree/dist/jstree.js"></script>
+<style>
+    .popover {
+        z-index: 1050;
+    }
+
+    .popover-li {
+        list-style: none;
+    }
+
+    .popover-li > li > a:focus, .popover-li > li > a:hover {
+        color: #262626;
+        text-decoration: none;
+        background-color: #f5f5f5;
+    }
+
+    .popover-li > li > a {
+        display: block;
+        padding: 3px 20px;
+        clear: both;
+        font-weight: 400;
+        line-height: 1.4285;
+        color: #333;
+        white-space: nowrap;
+    }
+
+    .popover-content {
+        padding: 9px 0px;
+    }
+
+    div#modal-file-choose .modal-body {
+        padding: 20px;
+    }
+
+    div#modal-file-choose .close {
+        margin-right: 18px;
+        font-size: 37px;
+        margin-top: 9px;
+        opacity: 0.6;
+    }
+
+    div#modal-file-choose .modal-footer {
+        padding: 10px 20px 10px;
+    }
+
+    div#modal-file-choose .panel {
+        margin-bottom: 0px !important;
+    }
+
+    .file-choose {
+        border: 1px solid #0090d9 !important;
+    }
+
+    div#tree1 {
+        overflow: scroll;
+        margin-bottom: 0;
+        height: 300px;
+    }
+
+    .file-choose div#loaderDiv {
+        max-height: 300px;
+        overflow: auto;
+    }
+</style>
+#{if _modal}
+<div class="modal fade" id="modal-file-choose" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title text-center m-t-10"><strong>Файл сонгох</strong></h4>
+
+            <div class="modal-body">
+                <div class="file-choose">
+                    <div class="row">
+                        <div class="col-md-3"
+                             style="border-right: solid 1px #0090d9;padding-right: 0px;">
+                            <div id="tree1"
+                                 class="jstree jstree-1 jstree-default jstree-default-responsive panel noselect"
+                                 role="tree">
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div id="loaderDiv"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success " data-dismiss="modal" id="choose-file-ok">Болсон</button>
+            </div>
+        </div>
+    </div>
+</div>
+#{/if}
+<script !src="">
+    $('#tree1').jstree({
+        'core': {
+            'data': {
+                type: "POST",
+                'url': '/folderShareTreeAttach',
+                'data': function (node) {
+                    return {'id': node.id};
+                }
+            }
+        }
+    }).on('changed.jstree', function (e, data) {
+        var obj = data.instance.get_node(data.selected[0]);
+        loadFiles(obj.id, 1);
+
+    });
+    //  load files
+    function loadFiles(fid, page) {
+        loading2('div#loaderDiv');
+        $.ajax({
+            type: "POST",
+            data: {fid: fid, ftype: 0, CurrentPageNumber: page, attach: true},
+            url: "/folderShareLoadFiles"
+        }).success(function (data) {
+            $('div#loaderDiv').html(data);
+        });
+    }
+    function showMoreInfo(file, ftype) {
+        file.append("<img src='/public/images/loading.gif' alt='Loading'/>");
+        $.ajax({
+            type: "POST",
+            data: {id: file.attr('fileId'), ftype: ftype},
+            url: "/folderShareShowMoreInfo"
+        }).success(
+                function (data) {
+                    file.find('img').remove();
+                    $.fancybox.open(data);
+                });
+    }
+    function handleAttachmentClickFileCenter(image) {
+        $.ajax({
+            type: "POST",
+            data: {id: image.attr('fileId')},
+            url: "/fSharedownloadHistorySave"
+        });
+        if (image.attr('openType') == 0) {
+            var ext = checkFileExtension(image.attr('extension'));
+            if (ext == imageFile) {
+                $.fancybox.open(image.attr('fileDir') + "." + image.attr('extension'));
+            } else {
+                if (ext == pdfFile) {
+                    window.open(image.attr('fileDir') + "." + image.attr('extension'));
+                } else if ((ext == wordFile || ext == excelFile || ext == powerPointFile) &&
+                        (image.attr('filesize').length == 0 || parseFloat(image.attr('filesize')) < 10)) {
+                    var pathArray = location.href.split('/');
+//                    protocol = pathArray[0];
+//                    host = pathArray[2];
+//                    url = protocol + '//' + host;
+                    window.open("http://view.officeapps.live.com/op/view.aspx?src=" + pathArray[2] + image.attr('fileDir') + "." + image.attr('extension'));
+                } else {
+                    $('body').append("<iframe height='0' width='0' style='display:none' src='" + downloadAction({
+                                fileDir: image.attr("fileDir"),
+                                fileName: image.attr("fileName"),
+                                extension: image.attr("extension")
+                            }) + "'/>");
+                }
+            }
+        } else
+            $('body').append("<iframe height='0' width='0' style='display:none' src='" + downloadAction({
+                        fileDir: image.attr("fileDir"),
+                        fileName: image.attr("fileName"),
+                        extension: image.attr("extension")
+                    }) + "'/>");
+    }
+
+    function uploadFromPc(uId) {
+        console.log("uid: " + uId);
+        $('[data-toggle="popover"]').popover('hide');
+        selectedUbox = uId;
+        $("div#upload-button input").click();
+    }
+
+    function chooseFromProgex(uId) {
+        selectedUbox = uId;
+        $('div#modal-file-choose').modal('show');
+        $('[data-toggle="popover"]').popover('hide');
+    }
+
+    $(document).ready(function () {
+        // file-iin arhivaas songoh heseg
+        $('ul.uploadBox li button').each(function () {
+            var uId = $(this).closest("ul").attr('id');
+            $(this).popover({
+                placement: '${_placement}',
+                html: 'true',
+                container: 'body',
+                content: "<div class='popover-li'><li><a href='#' onclick=uploadFromPc('" + uId + "')><i class='fa fa-upload' ></i> Компьютерээс файл оруулах</a></li> " +
+                "<li><a href=# onclick=chooseFromProgex('" + uId + "') ><i class='fa fa-folder-open' ></i> Файл архиваас сонгох</a></li></div>",
+                template: '<div class=popover role=tooltip ><div class=arrow ></div><div class=popover-content ></div></div>',
+            });
+        });
+        $('button#choose-file-ok').click(function () {
+            console.log("uId: " + selectedUbox);
+            $('div#modal-file-choose div#loaderDiv input:checked').each(function () {
+                console.log("checkbox: " + $(this).val() + " type:" + $(this).attr("checked"));
+                var lastLi = $('ul#' + selectedUbox + ' li:last');
+                var fileDir = $(this).attr('fileDir'),
+                        fileName = $(this).attr('fileName'),
+                        extension = $(this).attr('extension');
+                var ext = checkFileExtension(extension),
+                        imgHtml = "<img src='#src' class='imgIcon' fileDir='#fileDir' fileName='#fileName' extension='#extension' filesize='#filesize' nowUpload=1 />";
+                if (ext == imageFile)imgHtml = imgHtml.replace("#src", fileDir + "." + extension);
+                else if (ext == pdfFile) imgHtml = imgHtml.replace("#src", pdfFileIcon);
+                else if (ext == wordFile) imgHtml = imgHtml.replace("#src", wordFileIcon);
+                else if (ext == excelFile) imgHtml = imgHtml.replace("#src", excelFileIcon);
+                else if (ext == videoFile) imgHtml = imgHtml.replace("#src", videoFileIcon);
+                else if (ext == powerPointFile) imgHtml = imgHtml.replace("#src", powerPointFileIcon);
+                else if (ext == cadFile) imgHtml = imgHtml.replace("#src", autoCadFileIcon);
+                else if (ext == viewableVideoFile) imgHtml = imgHtml.replace("#src", viewableVideoIcon);
+                else if (ext == otherFile) imgHtml = imgHtml.replace("#src", otherFileIcon);
+                imgHtml = imgHtml.replace("#fileDir", fileDir).replace("#fileName", fileName).replace("#extension", extension).replace("#filesize", $(this).attr('filesize'));
+                var span = imgHtml + $("#deleteImageTemplate").html().replace('#fileDir', fileDir).replace("#extension", extension);
+                lastLi.before("<li><span>" + span + "</span></li>");
+            });
+        });
+        $('a[data-toggle=collapse]').each(function () {
+            $(this).click(function () {
+                if ($(this).hasClass("collapsed"))
+                    console.log();
+            });
+        });
+        $(document).on('show.bs.modal', '.modal', function () {
+            var zIndex = 1040 + (10 * $('.modal:visible').length);
+            $(this).css('z-index', zIndex);
+            setTimeout(function () {
+                $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack');
+            }, 0);
+        });
+    });
+</script>

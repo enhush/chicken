@@ -1,0 +1,38 @@
+#{extends 'CRUD/layout.html' /}
+#{set title:messages.get('crud.show.title', type.modelName) /}
+#{set activeMenu:type.name/}
+
+<div class="panel panel-default">
+    <div class="panel-heading" style="padding: 2px 15px">
+        <div class="row">
+            <div class="col-md-8">
+                <h4>&{'crud.show.title', type.modelName}</h4>
+            </div>
+            <div class="col-md-4 text-right" style="margin-top: 2px">
+            #{form @delete(object._key())}
+                <input id=delete class="btn btn-danger" type="button" value="&{'crud.delete', type.modelName}"/>
+            #{/form}
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-body">
+    #{form action:@save(object._key()), enctype:'multipart/form-data', class:'form-horizontal'}
+        #{crud.form /}
+        <div class="text-right" style="margin-top: 8px">
+            <input class="btn btn-success" type="submit" name="_save" value="&{'crud.save', type.modelName}"/>
+        *{<input type="submit" name="_saveAndContinue" value="&{'crud.saveAndContinue', type.modelName}" />}*
+        </div>
+    #{/form}
+    </div>
+</div>
+
+#{set 'moreScripts'}
+<script>
+    $('input#delete').click(function () {
+        if (confirm("Устгах уу?")) {
+            $(this).parent().submit();
+        }
+    });
+</script>
+#{/set}

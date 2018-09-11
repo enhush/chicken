@@ -1,0 +1,60 @@
+<div id="conversation${remoteUser.id}" class="conversation" remoteUserId="${remoteUser.id}" peerId="">
+    <div class="conversation-header">
+        <a class="conversation-more pull-right" href="javascript:void(0)">
+            <i class="fa fa-phone"></i>
+        </a>
+        <a class="conversation-return pull-left" href="javascript:void(0)" data-toggle="close-chat">
+            <i class="fa fa-angle-left"></i>
+        </a>
+
+        <div class="conversation-title">${remoteUser.toString()}</div>
+    </div>
+    <div class="chats">#{if chatMessages.size()==10}
+        <a href="javascript:void(0)" class="show-history" onclick="loadMoreMessages('${remoteUser.id}',2)">Түүх
+        харах</a>
+    #{/if}#{if chatMessages.size()>0}
+    %{ chatTime =chatMessages.get((chatMessages.size()-1)).date }%
+        <time class='chat-time'>${controllers.Functions.getDateOrTime(chatTime)}</time>
+    #{/if}%{ for(int i = chatMessages.size()-1; i >=0; i--) {}%
+        <div class='chat #{if chatMessages.get(i).msgSender.id!=user.id}chat-left#{/if}'>
+
+        #{if controllers.Functions.isBefor30Minut(chatTime,chatMessages.get(i).date)}
+            <time class="chat-time">${controllers.Functions.getDateOrTime(chatTime)}</time>
+        #{/if}
+        %{ chatTime = chatMessages.get(i).date }%
+
+            <div class='chat-avatar'>
+                <a class=avatar data-toggle=tooltip href=# data-placement=right>
+                    <img src='${chatMessages.get(i).msgSender.profilePicture}'> </a>
+            </div>
+
+            <div class='chat-body'>
+            #{chatContent chatMessage:chatMessages.get(i),user:user/}
+            %{ while(0 < i && chatMessages.get(i-1).msgSender.id==chatMessages.get(i).msgSender.id){
+                i--;
+                }%
+
+            #{if controllers.Functions.isBefor30Minut(chatTime,chatMessages.get(i).date)}
+                <div class="chat-content chat-time">${controllers.Functions.getDateOrTime(chatTime)}</div>
+            #{/if}
+            %{ chatTime = chatMessages.get(i).date }%
+
+            #{chatContent chatMessage:chatMessages.get(i),user:user/}
+
+            %{}}%
+            </div>
+        </div>
+    %{}}%</div>
+    <div class="conversation-reply">
+        <div class="input-group">
+            <input class="form-control send-text" placeholder="Зурвас бичих" type="text">
+                 <span class="input-group-btn">
+                     <input type="file" class="send-file" multiple/>
+                     <button type="button" class="btn btn-default btn-chat" onclick="transferFile('${remoteUser.id}')">
+                         <i class="fa fa-picture-o"></i></button>
+                     <button type="button" class="btn btn-default btn-chat" onclick="videoCall('${remoteUser.id}')"><i
+                             class="fa fa-video-camera"></i></button>
+                </span>
+        </div>
+    </div>
+</div>

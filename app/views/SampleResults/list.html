@@ -1,0 +1,75 @@
+#{extends 'CRUD/layout.html' /}
+#{set activeMenu:'SampleResult'/}
+#{set activeMenuSub: 'SampleResult'/}
+#{set title:messages.get('crud.list.title', type.modelName) /}
+#{flashCrud /}
+#{alertMessages /}
+#{set 'moreScripts'}
+
+#{/set}
+
+<div id="main-content">
+    <div class="row tengu kamikaze" id="status-row">
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-3">
+                    <input type="text" name="search" id="member-finder" class="form-control" placeholder="Дээжийн дугаар"
+                           value="${search}">
+                </div>
+                <div style="float: right;margin-right: 15px">
+                    *{#{if user.userType_id == 0 || user.userType_id == 1}}*
+                    *{<button onclick="sampleRefresh()" id="btnRefresh" class="btn btn-sm btn-primary"><i class="fa fa-refresh p-r-10"></i>Шинэчлэх</button>}*
+                    *{#{/if}}*
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row" id="List"></div>
+<script>
+    $(document).ready(function () {
+        $('select').selectpicker('refresh');
+    });
+
+    function sampleRefresh() {
+        var btn = $('button#btnRefresh');
+        btn.append("<img src='/public/images/loading.gif'/>");
+        btn.attr('disabled', 'disabled');
+        $.ajax({
+            type: "POST",
+            data: {
+                sumNameId: $('input#vet_sum_id').val()
+            },
+            url: "/getSampleResult"
+        }).success(function (samples) {
+            window.location.reload();
+            btn.find('img').remove();
+            btn.removeAttr('disabled');
+        });
+    }
+</script>
+<script>
+
+    $(window).load(function () {
+        list(1);
+    });
+
+    function list(page) {
+        var st = $('div#status-row');
+        $.ajax({
+            type: "POST",
+            data: {
+                CurrentPageNumber: page
+            },
+            url: "/sampleListData",
+            beforeSend: function () {
+                $("div#List").html("<div style='width:100%; text-align: center'><img src='/public/images/ajax-horizontal.gif'/></div>");
+            }
+        }).success(function (data) {
+            $("div#List").html(data);
+        });
+
+    }
+</script>
+<style>
+</style>

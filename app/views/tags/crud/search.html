@@ -1,0 +1,10 @@
+#{form action:@list().remove('page'), method:'GET',class:'form-inline'}
+    #{if _fields}
+        <input type="hidden" name="searchFields" class="${_inputClass}" value="${_fields.toString().substring(1, _fields.toString().length()-1).replace(',', '')}" />
+    #{/if}
+    <input type="text" name="search" class="${_inputClass}" value="${params.search?.escape()?.raw()}" placeholder="&{'crud.search'}"/>
+    <button type="submit" class="btn btn-default" style="vertical-align:top">&{'crud.search'}</button>
+    #{if _caller.params.search}
+        (<a href="@{list()}">&{'crud.list.totalSize', _caller.totalCount}</a>)
+    #{/if}
+#{/form}

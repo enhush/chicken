@@ -1,0 +1,77 @@
+#{if type==0}
+    #{list items:notifications,as:'notification'}
+    <a href="@{controllers.Notifications.notificationSee(notification.id)}"
+       style="text-decoration: none;cursor: pointer">
+        <li class="${notification.seen?'':'unseen'}" id="noti${notification.id}">
+            #{if notification.post != null || notification.sample!=nul}
+                <i class="fa fa-comment f-18 c-gray"></i>
+                <label> ${notification.message}</label>
+                <div style="color: #C4C4C4;font-size: 12px; font-weight: 400;"> ${notification.sender}
+                    <span class="dropdown-time" style="float: right;">${notification.lateDate()}</span></div>
+            #{/if}
+            #{elseif notification.event!=null}
+                <i class="fa fa-group f-18 c-orange"></i>
+                <label>${notification.message} үйл ажиллагаанд таныг урьсан байна</label>
+
+                <div style="color: #C4C4C4;font-size: 12px; font-weight: 400;"> ${notification.sender}
+                    <span class="dropdown-time" style="float: right;">${notification.lateDate()}</span></div>
+            #{/elseif}
+        </li>
+    </a>
+    #{/list}
+#{/if}
+#{else }
+    #{list items:notifications,as:'notification'}
+    <hr>
+    <div class="${notification.seen?'':'notiunseen'}" id="noti${notification.id}" style="padding: 5px">
+        *{#{if notification.meg!=null}}*
+            *{<a href="@{controllers.Notifications.notificationMessageSee(notification.id)}">}*
+                *{<li class="media">}*
+                    *{<div class="media-left" style="padding: 10px">}*
+                        *{<img src="${notification.sender.profilePicture}" style="height: 30px;margin-top: -5px;">}*
+                    *{</div>}*
+                    *{<div class="media-body">}*
+                        *{<strong>${notification.sender}</strong>}*
+                        *{<span}*
+                            *{#{if notification.status == 0}}*
+                                *{style="font-size: 12px"> -c <strong>${notification.meg.megNumber}</strong> дугаартай МЭГ ирлээ#{/if}}*
+                            *{#{elseif notification.status == 2}}*
+                                *{<strong>${notification.meg.megNumber}</strong> дугаартай МЭГ баталлаа#{/elseif}}*
+                            *{#{elseif notification.status == 3}}*
+                                *{<strong>${notification.meg.megNumber}</strong> дугаартай МЭГ батлахаас татгазлаа#{/elseif}}*
+                            *{#{elseif notification.status == 5}}*
+                                *{#{if notification.sender.userType_id == 2}}*
+                                *{%{police=controllers.Notifications.getCheckPoint(notification.sender);}%}*
+                                    *{<strong>${notification.meg.megNumber}</strong> дугаартай МЭГ <strong>${police.checkPoint}</strong>  постоор нэвтрэхийг зөвшөөрлөө}*
+                                *{#{/if}}*
+                                *{#{else }}*
+                                    *{<strong>${notification.meg.megNumber}</strong> дугаартай МЭГ постоор нэвтрэхийг зөвшөөрлөө}*
+                                *{#{/else}}*
+                            *{#{/elseif}}*
+                            *{#{elseif notification.status == 6}}*
+                                *{#{if notification.sender.userType_id == 2}}*
+                                *{%{police=controllers.Notifications.getCheckPoint(notification.sender);}%}*
+                                    *{<strong>${notification.meg.megNumber}</strong> дугаартай МЭГ <strong>${police.checkPoint}</strong>  постоор нэвтрэхийг хориглолоо}*
+                                *{#{/if}}*
+                                *{#{else }}*
+                                    *{<strong>${notification.meg.megNumber}</strong> дугаартай МЭГ постоор нэвтрэхийг хориглолоо}*
+                                *{#{/else}}*
+                            *{#{/elseif}}*
+                        *{</span>}*
+                        *{<div class="media-annotation">${notification.lateDate()}</div>}*
+                    *{</div>}*
+                *{</li>}*
+            *{</a>}*
+        *{#{/if}}*
+    </div>
+    #{if notification_isLast}
+        <hr>
+    #{/if}
+    #{/list}
+#{/else}
+<style>
+    hr {
+        margin-top: 0px !important;
+        margin-bottom: 0px !important;
+    }
+</style>

@@ -1,0 +1,661 @@
+<script src="https://www.gstatic.com/firebasejs/3.6.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.0/firebase-messaging.js"></script>
+<script>
+    // Initialize Firebase
+    var config = {
+        apiKey: "AIzaSyA7Uhw0o7ZNQSL5e7Fo6XiKqMdOf_9XOYg",
+        authDomain: "scvl-6e8f4.firebaseapp.com",
+        databaseURL: "https://scvl-6e8f4.firebaseio.com",
+        storageBucket: "",
+        messagingSenderId: "584455489662"
+    };
+    firebase.initializeApp(config);
+</script>
+<script !src="">
+    var charmenu = $('nav#menu-right');
+    var selectChatUserMessage;
+    var localStream = null;
+    var userId = '${user.id}';
+    var userAvatar = '${user.profilePicture}';
+    var companyName = 'VET';
+    var currentRemoteId = 0;
+    var progressChatUpload = {};
+
+    $(document).ready(function () {
+        $('span[data-rel="tooltip"]').tooltip();
+        if ($('.mm-panel .have-message').length > 0)
+            $('#chat-notification').removeClass('hide').effect("bounce", {times: 3}, 300);
+    });
+
+
+    function setUpChatSearch() {
+        //--------------------- for Search ----------------------------------//
+        var $container = $("nav#menu-right");
+        var $input			= $container.find('input#chat-search'),
+                $notfound		= $container.find( '.chat-notfound' ),
+                $items			= $container.find( '> ul > li.chat-search-item' ),
+                $item			= $(),
+                itemsIndexed	= [];
+
+        $items.each( function()
+        {
+            itemsIndexed.push( $( this ).find("span.chat-name").text().replace( /\s{2,}/g, ' ' ).toLowerCase() );
+        });
+
+        $input.on( 'keyup', function( e )
+        {
+            if( e.keyCode == 13 ) // enter
+            {
+                $input.trigger( 'blur' );
+                return true;
+            }
+
+            $items.each( function()
+            {
+                $item = $( this );
+                $item.html( $item.html().replace( /<span class="highlight">([^<]+)<\/span>/gi, '$1' ) );
+            });
+
+            var searchVal = $.trim( $input.val() ).toLowerCase();
+            if( searchVal.length )
+            {
+                for( var i in itemsIndexed )
+                {
+                    $item = $items.eq( i );
+                    if( itemsIndexed[ i ].indexOf( searchVal ) != -1 )
+                        $item.removeClass( 'is-hidden' ).html( $item.html().replace( new RegExp( searchVal+'(?!([^<]+)?>)', 'gi' ), '<span class="highlight">$&</span>' ) );
+                    else
+                        $item.addClass( 'is-hidden' );
+                }
+            }
+            else $items.removeClass( 'is-hidden' );
+
+            $notfound.toggleClass( 'is-visible', $items.not( '.is-hidden' ).length == 0 );
+        });
+    }
+    #{if activeMenu == 'Dashboard'}
+    $(document).ready(function(){
+        $('#chat-toggle').click();
+    });
+    #{/if}
+    #{else}
+    $(document).mouseup(function (e) {
+        if (!charmenu.is(e.target) && !$('#chat-toggle').is(e.target)// if the target of the click isn't the container...
+                && $('#chat-toggle').has(e.target).length === 0 && charmenu.has(e.target).length === 0) // ... nor a descendant of the container
+        {
+            if (charmenu.hasClass("chat-opened")) {
+                charmenu.removeClass("chat-opened");
+                charmenu.animate({right: '-300px'});
+            }
+        }
+    });
+    #{/else}
+    function chatSidebar() {
+
+
+        /* Open / Close right sidebar */
+        $('#chat-toggle').on('click', function () {
+            if (charmenu.hasClass("chat-opened")) {
+            #{if activeMenu != 'Dashboard'}
+                charmenu.removeClass("chat-opened");
+                charmenu.animate({right: '-300px'});
+            #{/if}
+            } else {
+                charmenu.addClass("chat-opened");
+                charmenu.animate({right: '0px'});
+            }
+            if ($('.mm-panel .have-message').length == 0)
+                $('#chat-notification').addClass('hide');
+            setTimeout(function () {
+                $('.mm-panel .have-message .badge-danger').each(function () {
+                    $(this).fadeIn();
+                });
+            }, 500);
+        });
+    }
+    (function () {
+
+        var original = document.title;
+        var timeout;
+
+        window.flashTitle = function (newMsg, howManyTimes) {
+            function step() {
+                document.title = (document.title == original) ? newMsg : original;
+
+                if (--howManyTimes > 0) {
+                    timeout = setTimeout(step, 1000);
+                }
+                ;
+            };
+
+            howManyTimes = parseInt(howManyTimes);
+
+            if (isNaN(howManyTimes)) {
+                howManyTimes = 6;
+            }
+            ;
+
+            cancelFlashTitle(timeout);
+            step();
+        };
+        window.cancelFlashTitle = function () {
+            clearTimeout(timeout);
+            document.title = original;
+        };
+
+    }());
+
+    function loadMoreMessages(remoteId, currentIndex) {
+        $.ajax({
+            type: "POST",
+            data: {
+                remoteId: remoteId,
+                currentIndex: currentIndex,
+            }, url: "/loadMoreMessages"
+        }).success(function (data) {
+            if (data.length > 0) {
+                currentIndex++;
+                $("nav#menu-right div#conversation" + remoteId + " div.chats a.show-history")
+                        .after(data)
+                        .attr("onclick", "loadMoreMessages(" + remoteId + "," + currentIndex + ")");
+            } else {
+                $("nav#menu-right div#conversation" + remoteId + " div.chats a.show-history").hide();
+            }
+            $('[data-toggle="tooltip"]').tooltip({container: 'body'});
+        });
+    }
+
+    function sendChatMessage(remoteId) {
+        var conversationDiv = $('div#conversation' + remoteId);
+        var chatVal = conversationDiv.find('input.send-text').val();
+        if (chatVal.length > 0) {
+            socket.send(JSON.stringify({
+                remoteId: conversationDiv.attr('remoteuserid'),
+                msg: chatVal,
+                mainType: "chat",
+                type: "message"
+            }));
+            var chats = conversationDiv.find('div.chats');
+            var chat_message = "<div class=chat-content ><p>" + chatVal + "</p>";
+            var lastChat = chats.find('div.chat:last');
+            if (chats.is(':empty') || lastChat.hasClass('chat-left')) {
+                chat_message = "<div class='chat'>" +
+                        "<div class='chat-avatar'> " +
+                        "<a class=avatar data-toggle=tooltip href=# data-placement=right >" +
+                        "<img src='" + userAvatar + "'> </a>" +
+                        "</div> <div class='chat-body'>" + chat_message + " </div> </div>"
+                if (chats.is(':empty')) chats.append(chat_message).fadeIn();
+                else lastChat.after(chat_message).fadeIn();
+            } else {
+                lastChat.find('div.chat-body div.chat-content:last').after(chat_message).fadeIn();
+            }
+            conversationDiv.find('input').val("");
+            chats.animate({scrollTop: chats[0].scrollHeight}, 1000);
+        }
+    }
+    function createConnection(remoteId) {
+        var remoteUserLi = $('nav#menu-right ul.mm-list li#li-' + remoteId);
+        var badge = $(remoteUserLi).find('.badge-danger');
+        if (remoteUserLi.hasClass('have-message')) {
+            remoteUserLi.removeClass('have-message');
+            badge.html('0');
+            badge.fadeOut();
+            $.ajax({
+                type: "POST",
+                data: {
+                    remoteId: remoteId,
+                }, url: "/chatReedMessage"
+            });
+        }
+        var conversationDiv = $('nav#menu-right div#conversation' + remoteId);
+        if (conversationDiv.length) {
+            $('div#conversation' + remoteId).addClass('active');
+        } else if (!remoteUserLi.hasClass("active")) {
+            remoteUserLi.addClass("active");
+            $.ajax({
+                type: "POST",
+                data: {
+                    remoteId: remoteId
+                }, url: "/conversationChat"
+            }).success(
+                    function (data) {
+                        $('nav#menu-right').append(data);
+                        $('nav#menu-right div#conversation' + remoteId).addClass('active');
+                        $("div#conversation" + remoteId + " a.conversation-return").on('click', function () {
+                            $('div#conversation' + remoteId).removeClass('active');
+                        });
+                        $('div#conversation' + remoteId + ' div.chats').animate({scrollTop: $('div#conversation' + remoteId + ' div.chats')[0].scrollHeight}, 200);
+                        $("div#conversation" + remoteId + " input").keypress(function (e) {
+                            if (e.keyCode == 13) {
+                                sendChatMessage(remoteId);
+                            }
+                        });
+                        $('div#conversation' + remoteId + ' input.send-file').change(function () {
+                            sendFile(remoteId);
+                        });
+                        $('[data-toggle="tooltip"]').tooltip({container: 'body'});
+                        var dragAndDropModule = new qq.DragAndDrop({
+                            dropZoneElements: [document.getElementById('conversation' + remoteId)],
+                            classes: {
+                                dropActive: "cssClassToAddToDropZoneOnEnter"
+                            },
+                            callbacks: {
+                                processingDroppedFiles: function () {
+                                    //TODO: display some sort of a "processing" or spinner graphic
+                                },
+                                processingDroppedFilesComplete: function (files, dropTarget) {
+                                    //TODO: hide spinner/processing graphic
+                                    currentRemoteId = remoteId;
+                                    uploaderChat.addFiles(files); //this submits the dropped files to Fine Uploader
+                                }
+                            }
+                        });
+                        remoteUserLi.removeClass("active");
+                    });
+
+        }
+        if ($('.mm-panel .have-message').length == 0)
+            $('#chat-notification').addClass('hide');
+    }
+
+    function handleChatMessage(senderId, remoteId, msg, type) {
+        var conversationDiv;
+        if (senderId == userId) {
+            // ooriinh ni message bol
+            conversationDiv = $('nav#menu-right div#conversation' + remoteId);
+        } else
+            conversationDiv = $('nav#menu-right div#conversation' + senderId);
+        if (conversationDiv.length) {
+            if (msg)
+                handleDataChannelMessage(senderId, remoteId, msg, type, true);
+        } else {
+            var tempId = senderId;
+            if (senderId == userId)
+                senderId = remoteId;
+            $.ajax({
+                type: "POST",
+                data: {
+                    remoteId: senderId
+                }, url: "/conversationChat"
+            }).success(
+                    function (data) {
+                        $('nav#menu-right').append(data);
+                        $('div#conversation' + senderId + ' a.conversation-return').on('click', function () {
+                            $('div#conversation' + senderId).removeClass('active');
+                        });
+                        $('div#conversation' + senderId + ' div.chats').animate({scrollTop: $('div#conversation' + senderId + ' div.chats')[0].scrollHeight}, 200);
+                        $("div#conversation" + senderId + " input").keypress(function (e) {
+                            if (e.keyCode == 13) {
+                                sendChatMessage(senderId);
+                            }
+                        });
+                        $('div#conversation' + senderId + ' input.send-file').change(function () {
+                            sendFile(senderId);
+                        });
+                        if (msg) {
+                            if (senderId == userId)
+                                senderId = tempId;
+                            handleDataChannelMessage(senderId, remoteId, msg, type, false);
+                        }
+                    });
+        }
+    }
+
+    function handleDataChannelMessage(senderId, remoteId, msg, type, appendMessage) {
+        console.log("userId: " + userId + "  sender:" + senderId + "  " + remoteId + " " + msg);
+        var conversationId;
+        if (senderId == userId)
+            conversationId = remoteId;
+        else
+            conversationId = senderId;
+        var conversationDiv = $('nav#menu-right div#conversation' + conversationId);
+        var vid = null;
+        var chats = conversationDiv.find('div.chats');
+        var userLi = $('nav#menu-right ul.mm-list li#li-' + conversationId);
+        var chat_message;
+        if(appendMessage) {
+            if (type == "message")
+                chat_message = "<div class=chat-content >" + chatText(msg) + "</div>";
+            else
+            //chat_message = "<div class='chat-content chat-image'><img src='" + msg + "' alt='хавсралт' height=80 width=80 ></div>";
+                chat_message = msg;
+            var lastChat = chats.find('div.chat:last');
+            var userSelf = "";
+            var showAvatar = lastChat.hasClass('chat-left');
+            if (senderId == userId) {
+                userSelf = "<div class='chat'>";
+            } else {
+                userSelf = "<div class='chat chat-left'>";
+                showAvatar = !showAvatar;
+            }
+            if (chats.is(':empty') || showAvatar) {
+                chat_message = userSelf +
+                        "<div class='chat-avatar'> " +
+                        "<a class=avatar data-toggle=tooltip href=# data-placement=right >" +
+                        "<img src='" + userLi.find("img").attr("src") + "'> </a>" +
+                        "</div> <div class='chat-body'>" + chat_message + " </div> </div>";
+                if (chats.is(':empty')) chats.append(chat_message);
+                else lastChat.after(chat_message).fadeIn();
+            } else {
+                lastChat.find('div.chat-body div.chat-content:last').after(chat_message).fadeIn();
+            }
+            chats.animate({scrollTop: chats[0].scrollHeight}, 500);
+        }
+        if (senderId != userId) {
+            if (!conversationDiv.hasClass("active") || !charmenu.hasClass("chat-opened")) {
+                var remoteUserName = userLi.find('span.chat-name').html();
+                $('#chat-popup').find('div.chat-popup-inner').html(" <div> <div class='clearfix w-600'>"
+                        + "<img src='" + userLi.find("img").attr("src") + "' width=30 class='pull-left img-circle p-r-5'>" + remoteUserName + "</div>"
+                        + "<div class='message m-t-5'>" + chatText(msg) + "</div> </div>");
+                $('#chat-notification').removeClass('hide').effect("bounce", {times: 3}, 300);
+                $('#chat-popup').fadeIn();
+                setTimeout(function () {
+                    $('#chat-popup').fadeOut();
+                }, 2000);
+                vid = document.getElementById("chatSound");
+                vid.play();
+                if (!conversationDiv.hasClass("active")) {
+                    userLi.find('span.badge').html(parseInt(userLi.find('span.badge').html()) + 1);
+                    userLi.addClass('have-message');
+                    userLi.find('span.badge').effect("bounce", {times: 3}, 'show');
+                }
+            } else {
+                $.ajax({
+                    type: "POST",
+                    data: {
+                        remoteId: senderId
+                    }, url: "/chatReedMessage"
+                });
+            }
+            if (!document.hasFocus()) {
+                flashTitle(msg);
+                if (vid == null) {
+                    vid = document.getElementById("chatSound");
+                    vid.play();
+                }
+            }
+        }
+    }
+    function chatText(message){
+        var msgs = message.split("\n");
+        for (var i = 0; i < msgs.length; i++){
+            var txt = msgs[i].split(" ").join("").split("&nbsp;").join(" ");
+            if (txt.length == 0){
+                msgs[i] = "<br>";
+            }
+        }
+        return "<p>" + msgs.join("</p><p>") + "</p>";
+
+    }
+
+    function transferFile(remoteId) {
+        currentRemoteId = remoteId;
+        $("div#upload-button-chat input").click();
+    }
+    var uploaderChat;
+    function createUploaderChat() {
+        uploaderChat = new qq.FineUploaderBasic({
+            button: document.getElementById('upload-button-chat'),
+            debug: true,
+            request: {
+                params: {uploadPath: '${controllers.Consts.uploadChatPath}'},
+                endpoint: '@{FileUploader.uploadFileNew}'
+            },
+            deleteFile: {
+                enabled: true,
+                method: 'POST',
+                endpoint: '@{FileUploader.deleteUploadFile}',
+            },
+            callbacks: {
+                onSubmit: function (id, name) {
+                    var file = uploaderChat.getFile(id);
+                    var conversationDiv = $('div#conversation' + currentRemoteId);
+                    var sendProgress = "<progress max=" + file.size + " value=0 ></progress>";
+                    var chats = conversationDiv.find('div.chats');
+                    var chat_message = "<div class=chat-content ><p>" + name + "</p>" +
+                            sendProgress + "</div>";
+                    var lastChat = chats.find('div.chat:last');
+                    if (chats.is(':empty') || lastChat.hasClass('chat-left')) {
+                        chat_message = "<div class='chat'>" +
+                                "<div class='chat-avatar'> " +
+                                "<a class=avatar data-toggle=tooltip href=# data-placement=right >" +
+                                "<img src='" + userAvatar + "'> </a>" +
+                                "</div> <div class='chat-body'>" + chat_message + " </div> </div>"
+                        if (chats.is(':empty')) chats.append(chat_message).fadeIn();
+                        else lastChat.after(chat_message).fadeIn();
+                    } else {
+                        lastChat.find('div.chat-body div.chat-content:last').after(chat_message).fadeIn();
+                    }
+                    chats.animate({scrollTop: chats[0].scrollHeight}, 1000);
+                    lastChat = chats.find('div.chat:last div.chat-content:last');
+                    sendProgress = lastChat.find("progress");
+                    sendProgress.max = file.size;
+                    progressChatUpload[id] = {
+                        sendProgress: sendProgress,
+                        remoteId: currentRemoteId,
+                        lastChat: lastChat
+                    };
+                },
+                onProgress: function (id, fileName, loaded, total) {
+                    progressChatUpload[id]['sendProgress'].val(loaded);
+                },
+                onComplete: function (id, name, responseJSON, xhr) {
+                    progressChatUpload[id]['sendProgress'].remove();
+                    var fileDir = responseJSON['filedir'],
+                            fileName = responseJSON['filename'],
+                            filesize = responseJSON['filesize'],
+                            extension = responseJSON['extension'];
+                    var chatVal, type;
+                    if (checkFileExtension(extension) == imageFile) {
+                        progressChatUpload[id]['lastChat'].addClass("chat-image");
+                        progressChatUpload[id]['lastChat'].html("<img src=" + fileDir + "t.jpg alt='хавсралт' height=80 width=80>");
+                        chatVal = "<div class='chat-content chat-image'><a href=" + fileDir + "." + extension + " download='"+ fileName + "." + extension
+                                +"' ><img src='" + fileDir + "t.jpg' alt='хавсралт' height=80 width=80 ></a></div>";
+                        type = "image";
+                    } else {
+                        chatVal = "<a href=" + fileDir + "." + extension + " download='"+ fileName + "." + extension +
+                                "' > <p>" + fileName + "." + extension + "</p> </a>";
+                        type = "message";
+                    }
+                    socket.send(JSON.stringify({
+                        remoteId: progressChatUpload[id]['remoteId'],
+                        msg: chatVal,
+                        attach: {fileName : fileName, fileDir: fileDir,filesize:filesize,extension:extension},
+                        mainType: "chat",
+                        type: type
+                    }));
+                }
+            }
+        });
+    }
+    createUploaderChat();
+    chatSidebar();
+    setUpChatSearch();
+
+
+
+
+    //*********************************** USER INFO  SETUP START****************************************************//
+    var chatUserDiv= $("div#chat-user-info-div");
+    var currentMousePos = { x: -1, y: -1 };
+    var mousePostUserImg = false;
+    $(document).ready(function () {
+        var index = navigator.appVersion.indexOf("Mobile");
+        if (index > -1) {
+            $('body').bind("touchstart", function (event) {
+                currentMousePos.x = event.pageX;
+                currentMousePos.y = event.pageY;
+                if (!mouseChatUserLi && !mousePostUserImg) {
+                    var position = chatUserDiv.offset();
+                    var bottom = position.top + chatUserDiv.outerHeight();
+                    var right = position.left + chatUserDiv.outerWidth();
+                    right += 50;
+                    if (!(currentMousePos.x > position.left && currentMousePos.x < right
+                            && currentMousePos.y > position.top && currentMousePos.y < bottom)) {
+                        chatUserDiv.hide();
+                    }
+                }
+            });
+        } else {
+            $(document).mousemove(function (event) {
+                currentMousePos.x = event.pageX;
+                currentMousePos.y = event.pageY;
+                if (!mouseChatUserLi && !mousePostUserImg) {
+                    var position = chatUserDiv.offset();
+                    var bottom = position.top + chatUserDiv.outerHeight();
+                    var right = position.left + chatUserDiv.outerWidth();
+                    right += 50;
+                    if (!(currentMousePos.x > position.left && currentMousePos.x < right
+                            && currentMousePos.y > position.top && currentMousePos.y < bottom)) {
+                        chatUserDiv.hide();
+                    }
+                }
+            });
+        }
+        var mouseChatUserLi = false;
+
+
+        $("li.chat-user-info-hover").bind('mouseenter', function () {
+            var aPos = $(this).offset(), ctTop = 0,ctLeft =0;
+            ctTop = (aPos.top- $(window).scrollTop());
+            ctLeft = (aPos.left- $(window).scrollLeft()) - 360;
+            chatUserDiv.css('top', ctTop + "px");
+            chatUserDiv.css('left', ctLeft + "px");
+            chatUserDiv.show();
+            chatUserDiv.find("img").attr("src",$(this).find("img").attr("src"));
+            chatUserDiv.find("strong").html($(this).find("span.chat-name").html());
+            chatUserDiv.find("div.chat-user-info-team").html($(this).attr("team"));
+            chatUserDiv.find("div.chat-user-info-position").html($(this).attr("position"));
+            chatUserDiv.find("div.chat-user-info-phone").html($(this).attr("phone"));
+            chatUserDiv.find("div.chat-user-info-email").html($(this).attr("email"));
+            mouseChatUserLi = true;
+        }).bind('mouseleave', function () {
+            mouseChatUserLi = false;
+            var position = chatUserDiv.offset();
+            var bottom = position.top + chatUserDiv.outerHeight();
+            var right = position.left + chatUserDiv.outerWidth();
+            right+=50;
+            if( !(currentMousePos.x > position.left && currentMousePos.x < right
+                    && currentMousePos.y > position.top && currentMousePos.y < bottom)){
+                chatUserDiv.hide();
+            }
+        });
+
+    });
+    //*********************************** USER INFO  SETUP END****************************************************//
+
+
+
+    //*********************************** FIREBASE SETUP START****************************************************//
+    const messaging = firebase.messaging();
+    // [START refresh_token]
+    // Callback fired if Instance ID token is updated.
+    messaging.onTokenRefresh(function() {
+        messaging.getToken()
+                .then(function(refreshedToken) {
+                    console.log('Token refreshed.');
+                    // Indicate that the new Instance ID token has not yet been sent to the
+                    // app server.
+                    setTokenSentToServer(false);
+                    // Send Instance ID token to app server.
+                    sendTokenToServer(refreshedToken);
+
+                })
+                .catch(function(err) {
+                    console.log('Unable to retrieve refreshed token ', err);
+                });
+    });
+    // [END refresh_token]
+
+    // [START receive_message]
+    // Handle incoming messages. Called when:
+    // - a message is received while the app has focus
+    // - the user clicks on an app notification created by a sevice worker
+    //   `messaging.setBackgroundMessageHandler` handler.
+    messaging.onMessage(function(payload) {
+        console.log("Message received. ", payload);
+        // [START_EXCLUDE]
+
+    });
+    // [END receive_message]
+
+    // Send the Instance ID token your application server, so that it can:
+    // - send messages back to this app
+    // - subscribe/unsubscribe the token from topics
+    function sendTokenToServer(currentToken) {
+        if (!isTokenSentToServer()) {
+            console.log('Sending token to server... '+currentToken);
+            $.ajax({
+                type: "POST",
+                data: {
+                    token:currentToken
+                }, url: "/webFirebaseToken"
+            });
+
+            setTokenSentToServer(true);
+        } else {
+            console.log('Token already sent to server so won\'t send it again ' +
+                    'unless it changes '+currentToken);
+        }
+    }
+    function isTokenSentToServer() {
+        if (window.localStorage.getItem('PmisSentToServer') == 1) {
+            return true;
+        }
+        return false;
+    }
+
+    function setTokenSentToServer(sent) {
+        if (sent) {
+            window.localStorage.setItem('PmisSentToServer', 1);
+        } else {
+            window.localStorage.setItem('PmisSentToServer', 0);
+        }
+    }
+
+    function requestPermission() {
+        console.log('Requesting permission...');
+        // [START request_permission]
+        messaging.requestPermission()
+                .then(function() {
+                    console.log('Notification permission granted.');
+                    // TODO(developer): Retrieve an Instance ID token for use with FCM.
+                    // [START_EXCLUDE]
+                    getToken();
+                    // [END_EXCLUDE]
+                })
+                .catch(function(err) {
+                    console.log('Unable to get permission to notify.', err);
+                });
+        // [END request_permission]
+    }
+
+    function getToken(){
+        // [START get_token]
+        // Get Instance ID token. Initially this makes a network call, once retrieved
+        // subsequent calls to getToken will return from cache.
+        console.log('get token.');
+        messaging.getToken()
+                .then(function(currentToken) {
+                    if (currentToken) {
+                        sendTokenToServer(currentToken);
+                    } else {
+                        // Show permission request.
+                        console.log('No Instance ID token available. Request permission to generate one.');
+                        requestPermission();
+                        setTokenSentToServer(false);
+                    }
+                })
+                .catch(function(err) {
+                    console.log('An error occurred while retrieving token. ', err);
+                    setTokenSentToServer(false);
+                });
+    }
+    $(document).ready(function () {
+        if(!isTokenSentToServer()) {
+            getToken();
+        }
+    });
+
+    //*********************************** FIREBASE SETUP END ****************************************************//
+</script>

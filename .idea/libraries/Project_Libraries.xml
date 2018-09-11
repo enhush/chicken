@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Project Libraries">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/lib" />
+      <root url="file://$PROJECT_DIR$/../../chicken/play-1.4.2/modules/docviewer/lib" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../chicken/play-1.4.2/modules/docviewer/src" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/../../chicken/play-1.4.2/modules/docviewer/lib" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/lib" recursive="false" />
+  </library>
+</component>

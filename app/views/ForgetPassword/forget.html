@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Хүний нөөцийн мэдээллийн систем</title>
+    <meta content="Эрүүл мэндийн хөгжлийн төв" name="description">
+    <meta content="LLC" name="author"/>
+    <link rel="shortcut icon" type="image/png" href="@{'/public/images/favicon.png'}">
+
+    <!-- Global stylesheets -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet" type="text/css">
+    <link href="/assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/bootstrap.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/core.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/components.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/colors.css" rel="stylesheet" type="text/css">
+    <!-- /global stylesheets -->
+
+    <!-- Core JS files -->
+    <script type="text/javascript" src="/assets/js/plugins/loaders/pace.min.js"></script>
+    <script type="text/javascript" src="/assets/js/core/libraries/jquery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/core/libraries/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/assets/js/plugins/loaders/blockui.min.js"></script>
+    <!-- /core JS files -->
+
+    <!-- Theme JS files -->
+    <script type="text/javascript" src="/assets/js/core/app.js"></script>
+    <!-- /theme JS files -->
+
+</head>
+
+<body class="login-container bg-slate-800">
+
+<!-- Page container -->
+<div class="page-container">
+
+    <!-- Page content -->
+    <div class="page-content">
+
+        <!-- Main content -->
+        <div class="content-wrapper">
+
+            <!-- Content area -->
+            <div class="content">
+
+                <!-- Advanced login -->
+                <div class="panel panel-body login-form">
+                    <div class="text-center">
+                        <div class="icon-object border-warning text-warning"><i class="icon-spinner11"></i></div>
+                        <div class="login-logo">
+                            <a href="#">
+                                <img src="/public/images/logo/login-logo.png" width="200px">
+                            </a>
+                        </div>
+                        <h5 class="content-group">Нууц үг сэргээх <small class="display-block">Шинэ нууц үгийг таны и-мэйлруу илгээх болно</small></h5>
+                    </div>
+
+                        <!-- BEGIN ERROR BOX -->
+                    #{if flash.error}
+                        <div class="alert alert-warning">
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <h4>Алдаа!</h4>
+                        &{flash.error}
+                        </div>
+                    #{/if}
+                    #{elseif flash.success}
+                        <div class="alert alert-success">
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <h4>Амжилттай!</h4>
+                        &{flash.success}
+                        </div>
+                    #{/elseif}
+                        <!-- END ERROR BOX -->
+                    #{if flash.success}
+                        <a href="/login" style="text-decoration: none">
+                            <button type="button" class="btn btn-primary btn-block">Нэвтрэх <i
+                                    class="icon-circle-right2 position-right"></i></button>
+                        </a>
+                    #{/if}
+                    #{else }
+                        <form action="@{controllers.ForgetPassword.reset()}" method="get" style="text-align: center">
+                            <div class="form-group has-feedback">
+                                <input type="email" class="form-control" name="email" id="inputMail" placeholder="И-мэйл хаяг">
+                                <div class="form-control-feedback">
+                                    <i class="icon-mail5 text-muted"></i>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn bg-blue btn-block">Илгээх <i class="icon-arrow-right14 position-right"></i></button>
+                        </form>
+                    #{/else}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

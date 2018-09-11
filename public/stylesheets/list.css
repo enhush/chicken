@@ -1,0 +1,27 @@
+.btn {
+    font-size: 13px !important;
+}
+
+.kamikaze {
+    margin-bottom: 10px;
+}
+
+table#posts-table thead tr th {
+    font-size: 12px !important;
+    line-height: 2px !important;
+}
+
+table#posts-table tbody tr td {
+    line-height: 30px !important;
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+}
+
+table#posts-table tbody tr td {
+    transition: background-color 0.3s;
+}
+
+table#posts-table tbody tr:hover td {
+    cursor: pointer;
+    background-color: #e3e5e8 !important;
+}

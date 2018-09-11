@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_chicken" default="compile.module.chicken">
+  <dirname property="module.chicken.basedir" file="${ant.file.module_chicken}"/>
+  
+  <property name="module.jdk.home.chicken" value="${jdk.home.1.8}"/>
+  <property name="module.jdk.bin.chicken" value="${jdk.bin.1.8}"/>
+  <property name="module.jdk.classpath.chicken" value="jdk.classpath.1.8"/>
+  
+  <property name="compiler.args.chicken" value="-encoding UTF-8 -source 1.6 ${compiler.args}"/>
+  
+  <property name="chicken.output.dir" value="undefined"/>
+  <property name="chicken.testoutput.dir" value="undefined"/>
+  
+  <path id="chicken.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="chicken.module.production.classpath">
+    <path refid="${module.jdk.classpath.chicken}"/>
+    <path refid="library.project_libraries.classpath"/>
+    <path refid="library.playframework_dependecies.classpath"/>
+    <pathelement location="${basedir}/../../chicken/play-1.4.2/framework/play-1.4.1.jar"/>
+  </path>
+  
+  <path id="chicken.runtime.production.module.classpath">
+    <path refid="library.project_libraries.classpath"/>
+    <path refid="library.playframework_dependecies.classpath"/>
+    <pathelement location="${basedir}/../../chicken/play-1.4.2/framework/play-1.4.1.jar"/>
+  </path>
+  
+  <path id="chicken.module.classpath">
+    <path refid="${module.jdk.classpath.chicken}"/>
+    <path refid="library.project_libraries.classpath"/>
+    <path refid="library.playframework_dependecies.classpath"/>
+    <pathelement location="${basedir}/../../chicken/play-1.4.2/framework/play-1.4.1.jar"/>
+  </path>
+  
+  <path id="chicken.runtime.module.classpath">
+    <path refid="library.project_libraries.classpath"/>
+    <path refid="library.playframework_dependecies.classpath"/>
+    <pathelement location="${basedir}/../../chicken/play-1.4.2/framework/play-1.4.1.jar"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.chicken">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.chicken">
+    <patternset refid="excluded.from.module.chicken"/>
+  </patternset>
+  
+  <path id="chicken.module.sourcepath">
+    <dirset dir="${module.chicken.basedir}/../../../chicken/play-1.4.2/modules/crud">
+      <include name="app"/>
+    </dirset>
+    <dirset dir="${module.chicken.basedir}/../../../chicken/play-1.4.2/modules/docviewer">
+      <include name="src"/>
+      <include name="app"/>
+    </dirset>
+    <dirset dir="${module.chicken.basedir}/../../../chicken/play-1.4.2/modules/secure">
+      <include name="app"/>
+    </dirset>
+    <dirset dir="${module.chicken.basedir}/../../chicken">
+      <include name="app"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.chicken" depends="compile.module.chicken.production,compile.module.chicken.tests" description="Compile module chicken"/>
+  
+  <target name="compile.module.chicken.production" depends="register.custom.compilers" description="Compile module chicken; production classes">
+    <mkdir dir="${chicken.output.dir}"/>
+    <javac2 destdir="${chicken.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.chicken}/javac">
+      <compilerarg line="${compiler.args.chicken}"/>
+      <bootclasspath refid="chicken.module.bootclasspath"/>
+      <classpath refid="chicken.module.production.classpath"/>
+      <src refid="chicken.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.chicken"/>
+    </javac2>
+    
+    <copy todir="${chicken.output.dir}">
+      <fileset dir="${module.chicken.basedir}/../../../chicken/play-1.4.2/modules/crud/app">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.chicken.basedir}/../../../chicken/play-1.4.2/modules/docviewer/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.chicken.basedir}/../../../chicken/play-1.4.2/modules/docviewer/app">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.chicken.basedir}/../../../chicken/play-1.4.2/modules/secure/app">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.chicken.basedir}/../app">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.chicken.tests" depends="register.custom.compilers,compile.module.chicken.production" description="compile module chicken; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.chicken" description="cleanup module">
+    <delete dir="${chicken.output.dir}"/>
+    <delete dir="${chicken.testoutput.dir}"/>
+  </target>
+</project>

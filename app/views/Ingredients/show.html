@@ -1,0 +1,64 @@
+#{extends 'CRUD/layout.html' /}
+#{set activeMenu: 'Ingredients'/}
+#{set title:'Орц'/}
+#{flashCrud /}
+#{set 'moreStyles'}
+<meta charset="utf-8">
+<link rel="stylesheet" media="screen" href="@{'/assets/css/jquery.mobile.css'}"/>
+<style>
+    .must{
+        color: red;
+    }
+    .c-gray {
+        text-align: right;
+        font-size: 14px;
+    }
+</style>
+#{/set}
+
+<script src="@{'/assets/plugins/jquery-validation/jquery.validate.min.js'}" type="text/javascript"></script>
+<script src="@{'/public/javascripts/validateOnlyNumber.js'}" type="text/javascript"></script>
+<script src="@{'/assets/plugins/jquery-mobile/jquery.mobile-1.4.2.js'}" type="text/javascript"></script>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="panel-body" style="padding: 8px">
+            <center><h3>Орц</h3></center>
+            <br><br>
+
+            <form action="@{save(object.id)}" class="form-horizontal" id="farmerForm" method="post"
+                  accept-charset="utf-8" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-2 c-gray">Нэр <span class="must">*</span> </div>
+                    <div class="col-md-3">
+                        <input class="form-control" name="object.name" id="object_name" value="${object.name}">
+                    </div>
+                    <div class="col-md-2 c-gray">Үлдсэн хэмжээ /кг/ <span class="must">*</span> </div>
+                    <div class="col-md-3">
+                        <input class="form-control" name="object.size" type="number" id="object_size"  value="${object.remain}">
+                    </div>
+
+                </div>
+                <br>
+
+                <br><br><br>
+                <div class="row">
+                    <center>
+                        <button class="btn btn-success" type="submit" id="createBtn" >
+                            &nbsp;&nbsp;Хадгалах&nbsp;&nbsp;
+                        </button>&nbsp;&nbsp;
+                        <a href="/delete_ingredient/${object.id}" onclick="return confirm('Устгах уу?')">
+                            <button id="delete" class="btn btn-danger m-r-20" type="button"/>&nbsp;&nbsp;Устгах&nbsp;&nbsp;</button>
+                        </a>
+                    </center>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $('select').selectpicker('refresh');
+    });
+
+
+</script>

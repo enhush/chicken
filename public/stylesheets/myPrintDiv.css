@@ -1,0 +1,96 @@
+div#printDialog div#borderOutdent {
+    border: 2px solid black;
+    padding: 1px;
+}
+
+div#printDialog div#borderInner {
+    border: 1px solid black;
+    padding: 4px;
+}
+
+div#printDialog div#printerDiv {
+    font-size: 12px;
+}
+
+div#printDialog table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+div#printDialog table td {
+    font-size: 12px;
+}
+
+div#printDialog td.bold {
+    font-weight: bold;
+}
+
+div#printDialog .text-center {
+    text-align: center;
+}
+
+div#printDialog td.right {
+    text-align: right;
+}
+
+div#printDialog table#head1 td {
+    text-align: center;
+}
+
+div#printDialog .title {
+    font-weight: bold;
+}
+
+div#printDialog td.border {
+    border: 1px solid black;
+}
+
+div#printDialog table#exam th {
+    border: 1px solid black;
+    padding: 1px 4px;
+    text-align: center;
+    font-size: 12px
+}
+
+div#printDialog table#exam td {
+    border: 1px solid black;
+    padding: 1px 4px;
+    font-size: 11px;
+}
+
+div#printDialog div.borderLine {
+    border-top: 3px solid saddlebrown;
+    height: 5px;
+    width: 100%;
+    border-bottom: 1px solid saddlebrown;
+    margin: 5px 0;
+}
+
+div#printDialog div#addressDiv a {
+    color: #0090D9;
+    display: inline;
+    width: auto;
+    padding: 0;
+    background-color: #FFF;
+}
+
+div#printDialog table#sign td {
+    vertical-align: middle;
+    /*padding: 6px 4px;*/
+}
+
+div#printDialog table#sign img {
+    vertical-align: middle;
+    height: 24px;
+}
+
+div#printDialog .posi {
+    padding: 2px 4px;
+    font-size: 12px;
+}
+
+div#printDialog .posi i {
+    padding: 0 5px;
+    border-left: 1px solid darkgray;
+}

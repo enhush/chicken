@@ -1,0 +1,35 @@
+#{if chatMessages.size()>0}
+%{ chatTime =chatMessages.get((chatMessages.size()-1)).date }%
+<time class='chat-time'>${controllers.Functions.getDateOrTime(chatTime)}</time>
+#{/if}
+%{ for(int i = chatMessages.size()-1; i >=0; i--) {}%
+<div class='chat #{if chatMessages.get(i).msgSender.id!=user.id}chat-left#{/if}'>
+
+#{if controllers.Functions.isBefor30Minut(chatTime,chatMessages.get(i).date)}
+    <time class="chat-time">${controllers.Functions.getDateOrTime(chatTime)}</time>
+#{/if}
+%{ chatTime = chatMessages.get(i).date }%
+
+    <div class='chat-avatar'>
+        <a class=avatar data-toggle=tooltip href=# data-placement=right>
+            <img src='${chatMessages.get(i).msgSender.profilePicture}'> </a>
+    </div>
+
+    <div class='chat-body'>
+    #{chatContent chatMessage:chatMessages.get(i),user:user/}
+    %{ while(0 < i && chatMessages.get(i-1).msgSender.id==chatMessages.get(i).msgSender.id){
+        i--;
+        }%
+
+    #{if controllers.Functions.isBefor30Minut(chatTime,chatMessages.get(i).date)}
+        <div class="chat-content chat-time">${controllers.Functions.getDateOrTime(chatTime)}</div>
+    #{/if}
+    %{ chatTime = chatMessages.get(i).date }%
+
+    #{chatContent chatMessage:chatMessages.get(i),user:user/}
+
+    %{}}%
+    </div>
+</div>
+%{}}%
+

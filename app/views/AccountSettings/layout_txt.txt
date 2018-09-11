@@ -1,0 +1,13 @@
+﻿Car=Автомашин
+Cars=Автомашин
+Stock=Хөрөнгийн бүртгэл
+Stocks=Хөрөнгийн бүртгэл
+
+
+
+<li class="${activeMenu == 'Cars'?menuActive+' active':''}"> <a href="@{controllers.Cars.list()}"><i
+                                    class="fa fa-folder-open"></i><span>Автомашин ашиглалт</span></a>
+                            </li>
+                            <li class="${activeMenu == 'Stocks'?menuActive+' active':''}"> <a href="@{controllers.Stocks.list()}"><i
+                                    class="fa fa-folder-open"></i><span>Хөрөнгийн бүртгэл</span></a>
+                            </li>

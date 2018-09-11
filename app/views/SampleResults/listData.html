@@ -1,0 +1,48 @@
+<div class="col-md-12 col-sm-12 col-xs-12" style="text-align: left;padding-top: 10px">
+    <table border="1px" style="background: white;width: 100%;">
+        <thead>
+        <tr>
+            <th>№</th>
+            <th>Дээжийн дугаар</th>
+            <th>Аймаг, сум</th>
+            <th>Шинжилгээний зорилго</th>
+            <th>Дээж хүлээн авсан огноо</th>
+            <th>Баталгаажсан огноо</th>
+
+        </tr>
+        </thead>
+        <tbody>
+        %{co=((CurrentPageNumber-1)*20)+1;}%
+        #{list items:sampleResults,as:'sample'}
+        <tr>
+            <td> ${co}</td>
+            <td>
+                #{if sample.pdfUrl != "" }<a href="${sample.path}"> ${sample.number} </a> #{/if}
+                #{else} ${sample.number} #{/else}
+            </td>
+            <td>${sample.sumName.aimag}->${sample.sumName}</td>
+            <td>${sample.purpose}</td>
+            <td>${sample.recieve_date?.format("yyyy-MM-dd")}</td>
+            <td>${sample.result_date?.format("yyyy-MM-dd HH:mm")}</td>
+        </tr>
+        %{co++;}%
+        #{/list}
+        <tr>
+            <td colspan="6" style="text-align: left">Нийт: ${totalSize}</td>
+        </tr>
+        </tbody>
+    </table>
+<input id="vet_sum_id" class="hidden" type="text" value="${doctor!=null?doctor.sumName.vet_sum_id:0}">
+#{if MaxPageNumber>1}
+    #{include '/SharedView/pageNavigation.html'/}
+    <script>
+        $(".page-navigation input.number-button").click(function () {
+            var currentPageNumber = $(this).attr('pagenumber');
+            if (currentPageNumber != ${CurrentPageNumber})list(currentPageNumber);
+        });
+    </script>
+#{/if}
+</div>
+<script>
+    $('[data-toggle="tooltip"]').tooltip();
+</script>

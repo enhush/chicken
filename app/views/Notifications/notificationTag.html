@@ -1,0 +1,199 @@
+<script language="javascript" type="text/javascript">
+    var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
+    var socket;
+    var json;
+    var modalReminderDialog;
+    $(function () {
+        modalReminderDialog = $('div#modal-reminder-dialog');
+    });
+
+    connectWebSocket();
+    function connectWebSocket() {
+        // Message received on the socket
+        socket = new WS('ws://${controllers.CompanyConf.ip}/websocket/socket?id=${user.id}');
+    // Message received on the socket
+        socket.onmessage = function (event) {
+        var json = JSON.parse(event.data);
+        if (json.mainType == 'chat') {
+            switch (json.type) {
+                case "userState":
+                    if (json.userId != "${user.id}")
+                    {
+                        var oldUserLi = $('nav#menu-right ul.mm-list li#li-' + json.userId);
+                        var isOnline = oldUserLi.find("i").hasClass("online");
+                        if( (json.state > 0 && !isOnline) || (json.state <= 0 && isOnline) ) {
+                            var offlineLi = $('nav#menu-right ul.mm-list li#li-offline');
+                            var state = (json.state > 0) ? "online" : "offline";
+                            var msgCountIn = parseInt(oldUserLi.find("span.badge-danger").html())
+                            var msgCount = (msgCountIn > 0) ? "<span class='pull-right badge badge-danger' >" +msgCountIn + " </span>" : " <span class='pull-right badge badge-danger' style='display: none;'>0</span>";
+                            var userLi = "<span class='inside-chat' >"
+                                    + "<i class=" + state + " ></i> <img src=" + json.avatar + " alt='avatar' >"
+                                    + "<span class='chat-name' >" + json.name + "</span>" + msgCount
+                                    + "<span class='chat-position'> " + json.position + " </span></span>";
+                            var notiLabel = (json.state > 0) ? "Системд нэвтэрлээ!" : "Системээс гарлаа!";
+                            var notiData = "<div class='noti-chat' > <span class='inside-chat'>"
+                                    + "<img src='" + json.avatar + "' > <span class='chat-name' >" + json.name
+                                    + "</span> <span>" + notiLabel + "</span> </span> </div>";
+                            var notiOption = {
+                                HorizontalPosition: "right",
+                                VerticalPosition: "bottom",
+                                ShowOverlay: false,
+                                TimeShown: 2000,
+                                OpacityOverlay: 0.5,
+                                MinWidth: 200
+                            };
+                            oldUserLi.html(userLi);
+                            if (json.state > 0) {
+                                offlineLi.before(oldUserLi);
+                                jSuccess(notiData, notiOption);
+                            } else {
+                                offlineLi.after(oldUserLi);
+                                jNotify(notiData, notiOption);
+                            }
+                        }
+                    }
+                    break;
+                case "message":
+                case "image":
+                case "file":
+                    handleChatMessage(json.senderId, json.remoteId, json.msg, json.type);
+                    break;
+            }
+        } else if (json.mainType == 'notification') {
+            if (parseInt(json.senderId) != parseInt(${user.id}) && json.uid.indexOf(",${user.id},") > -1) {
+                var notificationText = "", ncountType;
+                console.log(json.type);
+                switch (json.type) {
+//                    case "Meg":
+//                        notificationText = json.message;
+//                        ncountType = 1;
+//                        break;
+                    case "Event":
+                        notificationText = json.sender + " таныг '" + json.message + "' үйл ажиллагаанд таныг урьсан байна";
+                        ncountType = 0;
+                        break;
+
+                }
+                var filename = "/public/Sounds/NBCChimes";
+                document.getElementById("notificationSoundDiv").innerHTML = '<audio autoplay="autoplay"><source src="' + filename + '.mp3" type="audio/mpeg" /><source src="' + filename + '.ogg" type="audio/ogg" /><embed hidden="true" autostart="true" loop="false" src="' + filename + '.mp3" /></audio>';
+                jNotify(
+                        "<i class='fa fa-info-circle' style='color:#00A2D9;padding-right:8px'></i> " + notificationText, {
+                            HorizontalPosition: "left",
+                            VerticalPosition: "bottom",
+                            ShowOverlay: false,
+                            TimeShown: 5000,
+                            OpacityOverlay: 0.5,
+                            MinWidth: 250
+                        });
+                notificationCounterChange(ncountType, 1);
+            }
+        } else if (json.mainType == 'reminder') {
+            if (json.uid.indexOf(",${user.id},") > -1) {
+                modalReminderDialog.find('input#reminderId').val(json.id);
+                if (json.type == 'meeting') {
+                    modalReminderDialog.find('div#modal-reminder-body').html("<div > <a href='/meetings/" + json.meetingId + "'>  " + json.message + "</a> хурал " + json.date + " -т болно! </div>");
+                } else if (json.type == 'todo') {
+                    modalReminderDialog.find('div#modal-reminder-body').html("<div>" + json.date + ": " + json.message + "</div>");
+                } else if (json.type == 'rfi') {
+                    modalReminderDialog.find('div#modal-reminder-body').html("<div > <a href='/rfi/show?id=" + json.rfiId + "'>" + json.project + " төслийн " + json.rfiNo + " дугаартай мэдээлэл хүсэлт</a>ийн хугацаа дууслаа.</div>");
+                } else if (json.type == 'order') {
+                    modalReminderDialog.find('div#modal-reminder-body').html("<div > " + json.location + " байршилийн #" + json.orderId + "("+json.title+") дугаартай материал хүсэлтийн хугацаа " + json.date + " -т дуусна.</div>");
+                } else if (json.type == 'return') {
+                    modalReminderDialog.find('div#modal-reminder-body').html("<div > #" + json.returnId +"("+json.title+") дугаартай материал буцаалтын хугацаа " + json.date + " -т дуусна.</div> <br/> <div> Байршил:" + json.location + "  Материал:" + json.inventory + " </div>");
+                } else if (json.type == 'contract') {
+                    modalReminderDialog.find('div#modal-reminder-body').html("<div > <a href='/contracts/" + json.contractId + "'>  " + json.title + "</a> " + json.message + " </div>");
+                } else if (json.type == 'ganttTask' || json.type == 'task') {
+                    modalReminderDialog.find('div#modal-reminder-body').html("<div class='row' > <div class='col-lg-7' >" + json.message + "</div>" +
+                            "<div class='col-lg-4' > <div style='border-left: 2px solid #3598db;padding-left: 10px;' > <address> <strong>Төсөл</strong><br>" + json.project + "</address>" +
+                            "<address> <strong>Ажил</strong><br>" + json.task + "</address> </div> </div> </div>");
+                }
+                modalReminderDialog.modal({backdrop: 'static'});
+                document.getElementById("notificationSoundDiv").innerHTML = '<audio autoplay="autoplay">' +
+                        '<source src="/public/Sounds/TXPOnline.mp3" type="audio/mpeg" />' +
+                        '<embed hidden="true" autostart="true" loop="false" src="/public/Sounds/TXPOnline.mp3" /></audio>';
+            }
+        }
+    };
+        socket.onclose = function (e) {
+            console.log('WebSocket is closed. Reconnect will be attempted in 10 second.', e.reason);
+            setTimeout(function () {
+                connectWebSocket();
+            }, 10000);
+        };
+
+        socket.onerror = function (err) {
+            console.error('WebSocket encountered error: ', err.message, 'Closing WebSocket');
+            socket.close()
+        };
+    }
+
+    function notificationCounterChange(ntype, change) {
+        var ncount;
+        if (ntype == 0)ncount = $('ul.navbar-nav li#notifications-header span.badge');
+        else ncount = $('ul.navbar-nav li#notifications-header span.badge');
+        var ncountVal = parseInt(ncount.attr('ncount'));
+        ncountVal = ncountVal + (1 * change);
+        if (ncountVal > 0)ncount.attr('ncount', ncountVal).text(ncountVal);
+        else ncount.attr('ncount', ncountVal).text("");
+    }
+
+    var notifyUl, countNull;
+    $('ul.navbar-nav li.systemnotifications a.dropdown-toggle').on('mouseenter', function () {
+        countNull = $(this).find('span.badge');
+        notifyUl = $(this).parent().find('ul.dropdown-content-body');
+        notifyUl.html("<div style='text-align: center'><img src='/public/images/loading.gif'/></div>");
+        $.ajax({
+            type: "POST",
+            data: {uid:'${user.id}', type: $(this).attr('ntype')},
+            url: "/notificationHeader"
+        }).success(
+                function (data) {
+//                    countNull.attr('ncount', 0).text('');
+                    console.log(data);
+                    notifyUl.html(data);
+                });
+    });
+    function logoutMe() {
+//        socket.send('quit');
+        setTokenSentToServer(false);
+        $.ajax({
+            type: "POST",
+            data: {
+                token:""
+            }, url: "/webFirebaseToken"
+        });
+        window.location.href = "/logout";
+    }
+
+    $(document).ready(function () {
+        $('#modal-reminder-dialog').on('hidden.bs.modal', function (e) {
+            $.ajax({
+                type: "POST",
+                data: {
+                    userId: '${user.id}',
+                    reminderId: modalReminderDialog.find('input#reminderId').val()
+                }, url: "/notificationCheckReminder"
+            });
+        });
+    });
+</script>
+<div id="notificationSoundDiv"></div>
+<style>
+    ul.navbar-nav li.systemnotifications ul.dropdown-menu-list li.unseen:hover,
+    ul.navbar-nav li.systemnotifications ul.dropdown-menu-list li:hover {
+        background-color: #E0E0E0
+        /*background-color: #f6f7f8*/
+    }
+
+    ul.navbar-nav li.systemnotifications ul.dropdown-menu-list label {
+        cursor: pointer !important;
+    }
+
+    ul.navbar-nav li.systemnotifications ul.dropdown-menu-list li {
+        border-bottom: 1px solid #ddd;
+    }
+
+    ul.navbar-nav li.systemnotifications ul.dropdown-menu-list li.unseen {
+        background-color: #EEEEEE
+    }
+</style>

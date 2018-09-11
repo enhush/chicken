@@ -1,0 +1,27 @@
+#{extends 'CRUD/layout.html' /}
+#{set activeMenu:type.name/}
+#{set title:messages.get('crud.list.title', type.name) /}
+<div id="crudList" class="${type.name}">
+    <div class="panel panel-default">
+        <div id=tableTitle class="panel-heading">
+            <div class="row">
+                <div class="col-md-6">
+                #{crud.search inputClass:'form-control'/}
+                </div>
+                <div class="col-md-6" style="text-align: right"><a href="@{blank()}">
+                    <button type="button" class="btn btn-primary">&{'crud.add', type.modelName}</button>
+                </a></div>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12 table-responsive">
+                #{crud.table id:'crudTable', class:'table table-hover'/}
+                    <div id="crudListPagination">
+                    #{crud.pagination /}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

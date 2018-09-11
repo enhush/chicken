@@ -1,0 +1,25 @@
+#{extends 'CRUD/layout.html' /}
+#{set activeMenu:type.name/}
+#{set title:messages.get('crud.blank.title', type.modelName) /}
+<div class="panel panel-default">
+
+    <div class="panel-body">
+    #{form action:@create(), enctype:'multipart/form-data',class:'form-horizontal'}
+        #{crud.form}
+            #{crud.custom 'queue'}
+                <label for="object_queue" class="control-label col-md-2">&{'queue'}</label>
+
+                <div class="col-md-7">
+                    <input type="number" class="form-control" id="object_queue" name="object.queue" value="${queue}">
+                </div>
+            #{/crud.custom}
+        #{/crud.form}
+        <div class="text-right" style="margin-top: 8px">
+            <input class="btn btn-success" type="submit" name="_save"
+                   value="&{'crud.save', type.modelName}"/>
+            <input class="btn btn-success" type="submit" name="_saveAndAddAnother"
+                   value="&{'crud.saveAndAddAnother', type.modelName}"/>
+        </div>
+    #{/form}
+    </div>
+</div>

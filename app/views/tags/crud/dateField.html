@@ -1,0 +1,11 @@
+#{field 'object.' + _name}
+    <label for="${field.id}" class="control-label col-md-2">
+        &{_name}
+    </label>
+<div class="col-md-7 crud-datepicker">
+    <input id="${field.id}" class="${field.errorClass} form-control" type="text" name="${field.name}" value="${_value?.format()}" size="10" />
+    #{ifError field.name}
+        <span class="error">${field.error.raw()}</span>
+    #{/ifError}
+</div>
+#{/field}

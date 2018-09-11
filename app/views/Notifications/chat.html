@@ -1,0 +1,95 @@
+<nav id="menu-right" class="my-chat mm-menu mm-right no-print">
+    <div class="mm-search">
+        <div class="chat-header">Хэрэглэгчид</div>
+        <input placeholder="Хайх" id="chat-search" type="text" autocomplete="off">
+    </div>
+    <ul class="mm-list mm-panel mm-opened mm-current" id="mm-m0-p0">
+        <li class="mm-label label-big">ОНЛАЙН</li>
+    %{ users = controllers.UserLiveRoom.get().getOnlineOfflineUsers(user.id);}%
+    #{list items:users,as:'userOnline'}
+        #{if userOnline.state && userOnline.id != user.id}
+            <li class="img no-arrow chat-search-item #{if userOnline.messageCount>0}have-message#{/if} chat-user-info-hover" id="li-${userOnline.id}"
+                onclick="createConnection('${userOnline.id}')"
+                    position="${userOnline.userPosition.name}" team="${userOnline.userTeam.name}"
+                phone="${userOnline.phone1}" email="${userOnline.email}">
+                <span class="inside-chat">
+                    <i class="online"></i>
+                    <img src="${userOnline.profilePicture}" alt="avatar">
+                    <span class="chat-name chat-position">${userOnline.toString()}</span>
+                    <span class="pull-right badge badge-danger" style="display: none;">${userOnline.messageCount}</span>
+                    <span class="chat-position">${userOnline.userPosition.name}</span>
+                </span>
+            </li>
+        #{/if}
+    #{/list}
+        <li id="li-offline" class="mm-label label-big m-t-30">ОФФЛАЙН</li>
+    #{list items:users,as:'userOnline'}
+        #{if !userOnline.state && userOnline.id != user.id}
+            <li class="img no-arrow chat-search-item #{if userOnline.messageCount>0}have-message#{/if} chat-user-info-hover" id="li-${userOnline.id}"
+                onclick="createConnection('${userOnline.id}')"
+                position="${userOnline.userPosition.name}" team="${userOnline.userTeam.name}"
+                phone="${userOnline.phone1}" email="${userOnline.email}">
+                <span class="inside-chat">
+                    <i class="offline"></i>
+                    <img src="${userOnline.profilePicture}" alt="avatar">
+                  <span class="chat-name chat-position">${userOnline.toString()}</span>
+                   <span class="pull-right badge badge-danger" style="display: none;">${userOnline.messageCount}</span>
+                    <span class="chat-position">${userOnline.lastLogOutDate != null? controllers.Functions.getLateDate(userOnline.lastLogOutDate):userOnline.userPosition.name}</span>
+                </span>
+            </li>
+        #{/if}
+    #{/list}
+        <div class="chat-notfound"><p>Хоосон</p></div>
+    </ul>
+    <audio id="chatSound" controls preload="none" style="display: none">
+        <source src="/public/Sounds/FacebookChatSound.mp3" type="audio/mpeg"/>
+        <source src="/public/Sounds/FacebookChatSound.ogg" type="audio/ogg"/>
+        <embed hidden="true" loop="false" src="/public/Sounds/FacebookChatSound.mp3"/>
+    </audio>
+</nav>
+<div style="display: none" id="upload-button-chat"></div>
+<div id="attachContainerChat">
+    <div style="display: none" id="documentImageTemplate">
+        <li class="newAttach">
+            <span> <button type="button" class="btn upload btn-default btn-icon-sm btn-rounded"
+                           data-rel="tooltip" title="Хавсаргах"><i class="fa fa-cloud-upload"></i></button></span>
+        </li>
+    </div>
+    <div style="display: none" id="deleteImageTemplate">
+        <img height='12' class='deleteUploadedImage' width='12' src="@{'/public/images/delete-image.png'}" fileDir='#fileDir' extension='#extension' fileId='#fileId'/>
+    </div>
+</div>
+<div id="chat-user-info-div" style="display: none">
+    <div class="col-md-12">
+        <div class="row">
+            <div class="col-xs-3">
+                <div class="row">
+                    <img src="" class="pull-left img-responsive">
+                </div>
+            </div>
+            <div class="col-xs-9">
+                <div class="row" style="padding-left: 10px;">
+                    <h4 class="m-t-0 member-name"><strong></strong></h4>
+                    <div class="pull-left">
+                        <div class="chat-user-info-icons">
+                            <i class="fa fa-home c-gray-light"></i>
+                            <div class="chat-user-info-team m-l-10"> </div>
+                        </div>
+                        <div class="chat-user-info-icons">
+                            <i class="fa fa-circle-o c-gray-light"></i>
+                            <div class="chat-user-info-position m-l-10"> </div>
+                        </div>
+                        <div class="chat-user-info-icons">
+                            <i class="fa fa-phone c-gray-light"></i>
+                            <div class="chat-user-info-phone m-l-10"> </div>
+                        </div>
+                        <div class="chat-user-info-icons">
+                            <i class="fa fa-envelope-o c-gray-light"></i>
+                            <div class="chat-user-info-email m-l-10"> </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

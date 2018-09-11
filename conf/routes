@@ -1,0 +1,97 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                                       MainRoot.root
+
+# For secure module
+*       /                                       module:secure
+
+# Crud module routing
+*      /  					                    module:crud
+
+# For file upload
+POST /upload                                            FileUploader.uploadFileNew
+GET  /uploadedFiles                                     FileUploader.getUploadedFiles
+
+WS     /websocket/socket                                     WebSocket.join
+GET    /chat/{chatUserId}                                    Dashboard.index
+POST  /notificationHeader                                    Notifications.notificationsHeader
+POST  /notificationCheckReminder                             Notifications.checkMoreReminder
+GET   /showAllNotifications                                  Notifications.showallnotifications
+POST  /getAllNotifications                                   Notifications.getAllNotifications
+POST  /conversationChat                                      Notifications.conversation
+POST  /saveMessageHistory                                    Notifications.saveMessageHistory
+POST  /loadMoreMessages                                      Notifications.loadMoreMessages
+POST  /chatReedMessage                                       Notifications.reedMessage
+POST  /webFirebaseToken                                      Notifications.webFirebaseToken
+GET   /notificationSee                                       Notifications.notificationSee
+GET   /notificationMessageSee                                Notifications.notificationMessageSee
+GET   /usersDeleteUser/{id}                                  Users.deleteUser
+
+POST /dashboard/saveText                                     Dashboard.saveText
+POST /dashboard/saveBee                                      Dashboard.saveBee
+POST /dashboard/settings                                     Dashboard.settings
+POST /dashboardAddPost                                       Dashboard.addPost
+POST /dashboard/addComment                                   Dashboard.addComment
+POST /dashboard/showMoreComment                              Dashboard.showMoreComment
+POST /dashboard/showMoreQuestionComment                      Dashboard.showMoreQuestionComment
+POST /dashboard/likePost                                     Dashboard.likePost
+POST /dashboard/saveImage                                    Dashboard.saveImage
+POST /dashboard/loadMorePost                                 Dashboard.loadMorePost
+POST /dashboard/readMorePost                                 Dashboard.readMorePost
+POST /dashboard/deleteComment                                Dashboard.deleteComment
+POST /dashboard/deletePost                                   Dashboard.deletePost
+POST /dashboard/saveEditPost                                 Dashboard.saveEditPost
+POST /dashboard/saveEditComment                              Dashboard.saveEditComment
+POST /dashboardNoteUpdate                                    Dashboard.updateNote
+POST /dashboardNoteDelete                                    Dashboard.updateDelete
+POST /dashboardTodoNew                                       Dashboard.newTodoList
+POST /dashboardTodoDelete                                    Dashboard.deleteTodo
+POST /dashboardTodoUpdate                                    Dashboard.updateTodo
+POST /dashboardPinPost                                       Dashboard.PinPost
+POST /dashboard/addVote                                      Dashboard.addVote
+POST /userCoverPicture                                       Dashboard.coverImage
+POST /dashboard/showVoteSize                                 Dashboard.showVoteSize
+POST /dashboardAddChoice                                     Dashboard.AddChoice
+POST /getPostContent                                         Dashboard.getPostContent
+
+POST  /folderShareTree                                       FolderShare.getTree
+POST  /folderShareFileAlreadyNamed                           FolderShare.fileAlreadyNamed
+POST  /saveShareFile                                         FolderShare.saveFiles
+POST  /folderShareLoadFiles                                  FolderShare.loadFiles
+POST  /folderShareShowMoreInfo                               FolderShare.showMoreInfo
+POST  /fSharedownloadHistorySave                             FolderShare.downloadHistorySave
+POST  /folderShareDelete                                     FolderShare.delete
+POST  /folderShareEditShow                                   FolderShare.editShow
+POST  /folderShareFRename                                    FolderShare.folderRename
+POST  /folderShareFDelete                                    FolderShare.folderDelete
+POST  /folderShareFSettings                                  FolderShare.folderSettings
+POST  /folderShareFPermission                                FolderShare.folderPermission
+POST  /folderShareFPermissionSave                            FolderShare.folderPermissionSave
+POST  /folderShareFSettingSave                               FolderShare.folderSettingsSave
+POST  /folderShareSearchFiles                                FolderShare.searchFiles
+POST  /folderGetPermissionedUsers                            FolderShare.getPermissionedUsers
+POST  /folderShareTreeAttach                                 FolderShare.getTreeAttach
+POST  /deleteUploadFile                                      FileUploader.deleteUploadFile
+
+GET   /delete_product/{id}                                   Products.delete
+POST  /find_khoroos                                          Khoroos.find_khoroos
+POST  /find_apartments                                       Apartments.find_apartments
+POST  /find_addresses                                        Addresses.find_addresses
+POST  /set_addresses                                         Addresses.set_addresses
+
+
+# Ignore favicon requests
+GET     /favicon.ico                            404
+
+# Map static resources from the /app/public folder to the /public path
+GET     /public/                                    staticDir:public
+GET     /assets/                                    staticDir:assets
+GET     /FileCenter/                                staticDir:FileCenter
+GET     /FolderShare/                               staticDir:FolderShare
+
+
+# Catch all
+*       /{controller}/{action}                  {controller}.{action}

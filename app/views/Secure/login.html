@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Livestock tracing system</title>
+    <meta content="Улсын мал эмнэлэг" name="description">
+    <meta content="LLC" name="author"/>
+    <link rel="shortcut icon" type="image/png" href="@{'/public/images/favicon.png'}">
+
+    <!-- Global stylesheets -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900" rel="stylesheet"
+          type="text/css">
+    <link href="/assets/css/icons/icomoon/styles.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/bootstrap.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/core.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/components.css" rel="stylesheet" type="text/css">
+    <link href="/assets/css/colors.css" rel="stylesheet" type="text/css">
+    <!-- /global stylesheets -->
+
+    <!-- Core JS files -->
+    <script type="text/javascript" src="/assets/js/plugins/loaders/pace.min.js"></script>
+    <script type="text/javascript" src="/assets/js/core/libraries/jquery.min.js"></script>
+    <script type="text/javascript" src="/assets/js/core/libraries/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/assets/js/plugins/loaders/blockui.min.js"></script>
+    <!-- /core JS files -->
+
+    <!-- Theme JS files -->
+    <script type="text/javascript" src="/assets/js/plugins/forms/styling/uniform.min.js"></script>
+
+    <script type="text/javascript" src="/assets/js/core/app.js"></script>
+    <script type="text/javascript" src="/assets/js/pages/login.js"></script>
+    <!-- /theme JS files -->
+
+</head>
+
+<body class="login-container bg-slate-800">
+
+<!-- Page container -->
+<div class="page-container">
+
+    <!-- Page content -->
+    <div class="page-content">
+
+        <!-- Main content -->
+        <div class="content-wrapper">
+
+            <!-- Content area -->
+            <div class="content" style="padding-top: 180px;">
+
+                <!-- Advanced login -->
+                <div class="panel panel-body login-form">
+                    <div class="text-center">
+                        <div class="icon-object border-slate-300 text-slate-300"><i class="icon-reading"></i></div>
+                        <div class="login-logo">
+                            <a href="#">
+                                *{<img src="/public/images/logo/login-logo.png" width="200px">}*
+                            </a>
+                        </div>
+                    </div>
+                #{if flash.error}
+                    <div class="alert alert-danger">
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                        <h4>Анхааруулга!</h4>
+
+                        <p class="error">
+                            #{if session.attemptError!=null && Integer.parseInt(session.attemptError) > 6}
+                                Уучлаарай, 30 минутын дараа дахин оролдоно уу?
+                            #{/if}
+                            #{else}
+                            &{flash.error}
+                            #{/else}
+                        </p>
+                    </div>
+                #{/if} #{elseif flash.success}
+                    <div class="alert alert-info">
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                        <h4>Мэдээлэл!</h4>
+
+                        <p class="success">
+                        &{flash.success}
+                        </p>
+                    </div>
+                #{/elseif}
+                #{form @authenticate()}
+                    <div class="form-group has-feedback has-feedback-left">
+                        <input type="text" id="username" name="username" class="form-control" placeholder="Нэвтрэх нэр" value="${flash.username}">
+                        <div class="form-control-feedback">
+                            <i class="icon-user text-muted"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group has-feedback has-feedback-left">
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Нууц үг">
+                        <div class="form-control-feedback">
+                            <i class="icon-lock2 text-muted"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block">Нэвтрэх <i
+                                class="icon-circle-right2 position-right"></i></button>
+                    </div>
+                #{/form}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<script>
+
+        checkLockedPermission();
+        var rem = $('div#fileUploadContainer div#description');
+        var ftypeDiv = $('div#fileUploadContainer div#fileShareControl');
+        var uuid = guid();
+        var thumbnailUrl = checkFileExtension('${fileShare.extension}');
+        thumbnailUrl = (thumbnailUrl == imageFile) ? '${fileShare.dir+"."+fileShare.extension}' : '/public/images/fileIcon/other-icon.png';
+
+        uploaderFolderShare.addInitialFiles ([{
+            uuid: uuid,
+            thumbnailUrl: thumbnailUrl,
+            name: '${fileShare.name}',
+            size: '${fileShare.fileSize}',
+        }]);
+        uploaderFolderShare.setDeleteFileParams({
+            fileDir:'${fileShare.dir}',
+            extension:'${fileShare.extension}',
+        },0);
+        readyFiles.push({
+            fileSaveId: '${fileShare.id}',
+            dir: '${fileShare.dir}',
+            id: 0,
+            uuid: uuid,
+            filename: '${fileShare.name}',
+            filesize: '${fileShare.fileSize}',
+            extension: '${fileShare.extension}',
+        });
+
+        rem.find('textarea').val("${fileShare.description.raw()}");
+        ftypeDiv.find('input.fileType').eq(${fileShare.ftype}).prop('checked', true);
+    #{if users.size()>0}
+        ftypeDiv.find('div#sendUserTag').html('<ul></ul>');
+        ftypeDiv = ftypeDiv.find('div#sendUserTag ul');
+        #{list items:users,as:'us'}
+            ftypeDiv.append("<li id='u-${us.id}' seltype=u uid=${us.id}>" +
+                    "<span onclick=sendToUserRemoveSelection('u',${us.id})><i class='fa fa-minus-circle asterisk'></i></span>&nbsp;${us}" +
+                    "</li>");
+        #{/list}
+    #{/if}
+    #{if fileShare.ftype==2}
+        $('div#personSelect').removeClass("dhidden");
+    #{/if}
+    #{else}
+        $('div#personSelect').addClass("dhidden");
+    #{/else}
+
+</script>

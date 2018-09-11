@@ -1,0 +1,165 @@
+#{extends 'CRUD/layout.html' /}
+#{set activeMenu: 'Products'/}
+#{set title:'Бүтээгдэхүүн'/}
+#{flashCrud /}
+#{set 'moreStyles'}
+<meta charset="utf-8">
+<link rel="stylesheet" media="screen" href="@{'/assets/css/jquery.mobile.css'}"/>
+<style>
+    .c-gray {
+        text-align: right;
+        font-size: 14px;
+    }
+
+    .form-horizontal .control-label {
+        padding-top: 7px !important;;
+        margin-bottom: 0;
+        text-align: right !important;
+    }
+    .mytable th,
+    .mytable td {
+        border: 1px solid lightgrey;
+        padding: 4px 8px;
+        font-weight: normal;
+    }
+
+    .mytable input.noborder {
+        width: 98%;
+        border: none;
+    }
+
+    .text-center:hover{
+        background-color: #e6e6e6;
+        cursor: pointer;
+    }
+    .tableInput{
+        border: none;
+        background-color: transparent;
+        width:100%;
+    }
+    .show-tick{
+        width:100%;
+    }
+</style>
+#{/set}
+
+<script src="@{'/assets/plugins/jquery-validation/jquery.validate.min.js'}" type="text/javascript"></script>
+<script src="@{'/public/javascripts/validateOnlyNumber.js'}" type="text/javascript"></script>
+<script src="@{'/assets/plugins/jquery-mobile/jquery.mobile-1.4.2.js'}" type="text/javascript"></script>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="panel-body" style="padding: 8px">
+            <center><h3>Бүтээгдэхүүн</h3></center>
+            <br><br>
+
+            <form action="@{save(object.id)}" class="form-horizontal" id="farmerForm" method="post"
+                  accept-charset="utf-8" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-2 c-gray">Нэр :</div>
+                    <div class="col-md-3">
+                        <input class="form-control" name="object.name" id="object_name" value="${object.name}">
+                    </div>
+                    <div class="col-md-2 c-gray">Төрөл :</div>
+                    <div class="col-md-3">
+                        <select class="form-control" id="object_type" name="object.type">
+                        #{list items:controllers.Consts.productType, as:'type'}
+                            <option value="${type_index-1}" ${type_index-1==object.type ? 'selected' : ''}>${type}</option>
+                        #{/list}
+                        </select>
+                    </div>
+                </div>
+                <br>
+
+                <div class="row">
+                    <div class="col-md-2 c-gray">Хэмжээ :</div>
+                    <div class="col-md-3">
+                        <input class="form-control" name="object.size" type="text" id="object_size"  value="${object.size}">
+                    </div>
+                    <div class="col-md-2 c-gray">Үнэ /₮/:</div>
+                    <div class="col-md-3">
+                        <input class="form-control" name="object.price" type="text" id="object_price"  value="${object.price}">
+                    </div>
+                </div>
+                <br>
+
+                <div class="row" id="ingredients"  #{if object.type == 1}style="display:none;"#{/if}>
+                    <div class="col-md-2 c-gray">Орц :</div>
+                    <div class="col-md-8">
+                        <table class="mytable" style="width: 100%">
+                            <thead>
+                            <tr>
+                                <th width="45%">Орц</th>
+                                <th width="45%">Хэмжээ /гр/</th>
+                                <th class='text-center' style="width: 10%" onclick="addIngredient()"><i class="fa fa-plus-square"></i>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody id="productTable">
+                            #{list items:object.productIngredientRelations, as:'rel'}
+                            <tr id="dd${rel.id}">
+                                <td>
+                                    <select name='ingredient_name' class='show-tick' data-live-search='true' title='Сонгох'>
+                                        #{list items:ingredients,as:'ingredient'}
+                                            <option value="${ingredient.id}" ${ingredient.id==rel.ingredient?.id ? 'selected' : ''}>${ingredient.name}</option>
+                                        #{/list}
+                                    </select>
+                                </td>
+                                <td><input type="number" class="tableInput" name="ingredient_portion" value="${rel.portion}"/></td>
+                                <td class='text-center' onclick=removeIngredient("dd${rel.id}")><i class='fa fa-minus-square'></i></td>
+                            </tr>
+                            #{/list}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <br>
+
+                <br><br><br>
+                <div class="row">
+                    <center>
+                        <button class="btn btn-success" type="submit" id="createBtn" >
+                           &nbsp;&nbsp;Хадгалах&nbsp;&nbsp;
+                        </button>&nbsp;&nbsp;
+                        <a href="/delete_product/${object.id}" onclick="return confirm('Устгах уу?')">
+                            <button id="delete" class="btn btn-danger m-r-20" type="button"/>&nbsp;&nbsp;Устгах&nbsp;&nbsp;</button>
+                        </a>
+                    </center>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $('select').selectpicker('refresh');
+    });
+
+    var ingredients = "";
+    #{list items:ingredients,as:'ingredient'}
+    ingredients += "<option value=${ingredient.id}>${ingredient.name}</option>";
+    #{/list}
+
+    $('select#object_type').on('change', function () {
+        if($(this).val() == 0){
+            $("#ingredients").show();
+        }
+        else{
+            $("#ingredients").hide();
+        }
+    });
+
+
+    function addIngredient(){
+        var date = new Date();
+        var tt = date.getTime();
+        $("#productTable").append('<tr id="' + tt + '"><td><select name="ingredient_name" class="show-tick" data-live-search="true" title="Сонгох">'+
+                ingredients + '</select></td>' +
+                '<td><input type="number" class="tableInput" name="ingredient_portion"/></td>'+
+                '<td class="text-center" onclick=removeIngredient("' + tt + '")><i class="fa fa-minus-square" ></i></td></tr>');
+        $('select').selectpicker('refresh');
+    }
+
+    function removeIngredient(tt){
+        $("#"+tt).remove();
+    }
+</script>

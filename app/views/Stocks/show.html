@@ -1,0 +1,234 @@
+#{extends 'CRUD/layout.html' /}
+#{set activeMenu: 'Stocks'/}
+#{set title:'Хөрөнгийн бүртгэл'/}
+#{flashCrud /}
+#{set 'moreStyles'}
+<meta charset="utf-8">
+<link rel="stylesheet" media="screen" href="@{'/assets/css/jquery.mobile.css'}"/>
+<style>
+    .must{
+        color: red;
+    }
+    .c-gray {
+        text-align: right;
+        font-size: 14px;
+    }
+</style>
+#{/set}
+
+<script src="@{'/assets/plugins/jquery-validation/jquery.validate.min.js'}" type="text/javascript"></script>
+<script src="@{'/public/javascripts/validateOnlyNumber.js'}" type="text/javascript"></script>
+<script src="@{'/assets/plugins/jquery-mobile/jquery.mobile-1.4.2.js'}" type="text/javascript"></script>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="panel-body" style="padding: 8px">
+            <center><h3>Хөрөнгийн бүртгэл</h3></center>
+            <br><br>
+
+            <form action="@{save(object.id)}" class="form-horizontal" id="farmerForm" method="post"
+                  accept-charset="utf-8" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-2 c-gray">Хөрөнгийн нэр <span class="must">*</span> </div>
+                    <div class="col-md-3">
+                        <input class="form-control" name="object.name" id="object_name" value="${object.name}">
+                    </div>
+                    <div class="col-md-2 c-gray">Тоо ширхэг <span class="must">*</span> </div>
+                    <div class="col-md-3">
+                        <input class="form-control" name="object.count" type="number" id="object_count"  value="${object.count}">
+                    </div>
+
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-2 c-gray">Нэгжийн үнэ <span class="must">*</span> </div>
+                    <div class="col-md-3">
+                        <input class="form-control" name="object.unitPrice" type="number" id="object_unitPrice" value="${object.unitPrice}">
+                    </div>
+                    <div class="col-md-2 c-gray">Нийт үнэ </div>
+                    <div class="col-md-3">
+                        <input class="form-control" name="object.allPrice" type="number" id="object_allPrice"  value="${object.allPrice}">
+                    </div>
+
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-2 c-gray">Бүртгэсэн огноо </div>
+                    <div class="col-md-3">
+                        <input class="form-control datetimepicker" name="object.startDate" id="object_startDate" value="${object.startDate?.format("yyyy-MM-dd")}">
+                    </div>
+                    <div class="col-md-2 c-gray">Төлөв </div>
+                    <div class="col-md-3">
+                        <select id="object_state" name="object.state" class='form-control show-tick' data-live-search='true' title='Сонгох'>
+                        #{list items:controllers.Consts.stockState, as:'state'}
+                            <option value="${state_index-1}" ${state_index-1==object.state ? 'selected' : ''}>${state}</option>
+                        #{/list}
+                        </select>
+                    </div>
+
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-2 c-gray">Хариуцсан алба, хэлтэс </div>
+                    <div class="col-md-3">
+                        <select id="object_respondentTeam" name="object.respondentTeam.id" class='form-control show-tick' data-live-search='true' title='Сонгох'>
+                            <option value="0">Сонгох</option>
+                        #{list items:userTeams, as:'team'}
+                            <option value="${team.id}" ${team.id==object.respondentTeam?.id ? 'selected' : ''}>${team.name}</option>
+                        #{/list}
+                        </select>
+                    </div>
+                    <div class="col-md-2 c-gray">Хариуцагч </div>
+                    <div class="col-md-3">
+                        <select id="object_respondent" name="object.respondent.id" class='form-control show-tick' data-live-search='true' title='Сонгох'>
+                            <option value="0">Сонгох</option>
+                        #{list items:users, as:'us'}
+                            <option value="${us.id}" ${us.id==object.respondent?.id ? 'selected' : ''}>${us}</option>
+                        #{/list}
+                        </select>
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-2 c-gray">Тэмдэглэл </div>
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" name="object.note" id="object_note" value="${object.note}">
+                    </div>
+
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-2 c-gray">Файл </div>
+                    <div class="col-md-8">
+                        <div class="">
+                            <button type="button" class="btn btn-info" id="upload-leaderDefinition">
+                                <i class="fa fa-cloud-upload"></i> &nbspФайл хавсаргах
+                            </button>
+                        </div>
+                        <div id="leaderDefinition_embed">
+                            #{list items:object.stockFiles, as:'file'}
+                                #{if file.extension == 'jpg' || file.extension == 'jpeg' || file.extension == 'png'}
+                                    <div><br>
+                                        <input type='hidden' id='file_path' name='file_path' value='${file.path}'>
+                                        <input type='hidden' name='file_name' value='${file.name}'>
+                                        <input type='hidden' name='file_extension' value='${file.extension}'>
+                                        <a href='${file.path}' target='_blank'><embed src='${file.path}' height='400'></a>
+                                        &nbsp&nbsp<i class="fa fa-trash-o" id="remove_leaderDefinition" style="color: red"></i>
+                                    </div>
+                                #{/if}
+                                #{else }
+                                    <div><br>
+                                        <input type='hidden' id='file_path' name='file_path' value='${file.path}'>
+                                        <input type='hidden' name='file_name' value='${file.name}'>
+                                        <input type='hidden' name='file_extension' value='${file.extension}'>
+                                        <a href='${file.path}' target='_blank'>${file.name}</a>
+                                        &nbsp&nbsp<i class="fa fa-trash-o" id="remove_leaderDefinition" style="color: red"></i>
+                                    </div>
+                                #{/else}
+                            #{/list}
+                        </div>
+                    </div>
+
+                </div>
+                <br>
+                <br><br><br>
+                <div class="row">
+                    <center>
+                        <button class="btn btn-success" type="submit" id="createBtn" >
+                            &nbsp;&nbsp;Хадгалах&nbsp;&nbsp;
+                        </button>&nbsp;&nbsp;
+                        <a href="/delete_stock/${object.id}" onclick="return confirm('Устгах уу?')">
+                            <button id="delete" class="btn btn-danger m-r-20" type="button"/>&nbsp;&nbsp;Устгах&nbsp;&nbsp;</button>
+                        </a>
+                    </center>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        $('select').selectpicker('refresh');
+        createLeaderDefinitionUploader();
+    });
+
+    jQuery(' .datetimepicker').each(function () {
+        $(this).datetimepicker({lang: 'mn', timepicker: false, format: 'Y-m-d', scrollMonth: false});
+    });
+
+    $("input#object_count").change(function(){
+        var unit = parseInt($("#object_unitPrice").val());
+        var count = parseInt($(this).val());
+        if(unit >= 0 && count >= 0){
+            $("#object_allPrice").val(unit*count);
+        }
+    });
+
+    $("input#object_unitPrice").change(function(){
+        var unit = parseInt($(this).val());
+        var count = parseInt($("#object_count").val());
+        if(unit >= 0 && count >= 0){
+            $("#object_allPrice").val(unit*count);
+        }
+    });
+    var currentLeaderDefinitionUrl = "";
+    function createLeaderDefinitionUploader() {
+        var uploader = new qq.FineUploaderBasic({
+            button: document.getElementById('upload-leaderDefinition'),
+            debug: true,
+            validation: {
+                allowedExtensions: ['jpg', 'jpeg', 'png', 'bmp', 'pdf', 'docx', 'xlsx'],
+            },
+            request: {
+                params: {uploadPath: '${controllers.Consts.fileStock}'},
+                endpoint: '@{FileUploader.uploadFileNew}'
+            },
+            callbacks: {
+                onSubmit: function (id, fileName) {
+                    var parts = currentLeaderDefinitionUrl.split('.');
+                    deleteUploadedFile(parts[0], parts[1]);
+                },
+                onProgress: function (id, fileName, loaded, total) {
+                    var li = $('div#attachContainer #uploadBox li:last span span');
+                    li.text(parseInt(loaded * 100 / total) + "%");
+                },
+                onComplete: function (id, fileName, responseJSON) {
+                    if (responseJSON['success'] == true) {
+                        currentLeaderDefinitionUrl = responseJSON['filedir'] + "." + responseJSON['extension'];
+                        if(responseJSON['extension']=='png' || responseJSON['extension']=='jpeg' || responseJSON['extension']=='jpg'){
+                            $('#leaderDefinition_embed').append("<div><br><input type='hidden' id='file_path' name='file_path' value='" + currentLeaderDefinitionUrl + "'>" +
+                                    "<input type='hidden' name='file_name' value='" + fileName + "'>" +
+                                    "<input type='hidden' name='file_extension' value='" + responseJSON['extension'] + "'>" +
+                                    "<a href='" + currentLeaderDefinitionUrl + "' target='_blank'>" + "<embed src='" + currentLeaderDefinitionUrl + "' height='400'>" + "</a>" +
+                                    '&nbsp&nbsp<i class="fa fa-trash-o" id="remove_leaderDefinition" style="color: red"></i></div>');
+                        }
+                        else {
+
+                            $('#leaderDefinition_embed').append("<div><br><input type='hidden' id='file_path' name='file_path' value='" + currentLeaderDefinitionUrl + "'>" +
+                                    "<input type='hidden' name='file_name' value='" + fileName + "'>" +
+                                    "<input type='hidden' name='file_extension' value='" + responseJSON['extension'] + "'>" +
+                                    "<a href='" + currentLeaderDefinitionUrl + "' target='_blank'>" + fileName + "</a>" +
+                                    '&nbsp&nbsp<i class="fa fa-trash-o" id="remove_leaderDefinition" style="color: red"></i></div>');
+                        }
+                    } else {
+                        showErrorMessage("&{'image_not_RGB'}");
+                    }
+                }
+            }
+        });
+    }
+
+    $(document).on('click', '#remove_leaderDefinition', function () {
+        if (confirm("Устгах уу?")) {
+            var dir = $(this).parent().find("#file_path").val();
+            var dirsplit = dir.split(".");
+            $.ajax({
+                type: "POST",
+                data: {fileDir: dirsplit[0], extension: dirsplit[1]},
+                url: "/deleteUploadFile"
+            }).success(function () {
+            });
+            $(this).parent().remove();
+        }
+    });
+
+</script>
